@@ -774,11 +774,11 @@ html,body{
       <div class="pedal-well">
         <div class="pedal pedal-brake" id="pedalBrake">
           <span class="pedal-title">BRAKE</span>
-          <span class="pedal-sub">HOLD STOP</span>
+          <span class="pedal-sub">ONLY STOP</span>
         </div>
         <div class="pedal pedal-gas" id="pedalGas">
           <span class="pedal-title">GAS</span>
-          <span class="pedal-sub" id="gasSub">1st GEAR</span>
+          <span class="pedal-sub" id="gasSub">HOLD: AUTO SHIFT</span>
         </div>
       </div>
     </div>
@@ -829,17 +829,23 @@ const CAR_GEARS = [
   { id: "4", label: "4th",  pwm: 215 },
   { id: "5", label: "5th",  pwm: 255 }
 ];
-let carGearIdx = 2; // defaults to 1st gear when entering Car Mode
-let steerAngle = 0; // -135..+135 degrees in Car Mode
+let carGearIdx = 2;      // defaults to 1st gear when entering Car Mode
+let steerAngle = 0;      // -135..+135 degrees in Car Mode
 let gasHeld = false;
 let brakeHeld = false;
+let carRolling = false;  // stays true once Gas is pressed; only Brake pedal stops the car
+let carPwm = 0;          // live ramped PWM (95..255 in 1st..5th gear)
+let lastSentCarPwm = 0;
 
 // ---------- Tabs & Car Mode Toggle ----------
 function setCarMode(on){
   carMode = on;
-  resetJoystick();
+  carRolling = false;
+  carPwm = 0;
+  lastSentCarPwm = 0;
   gasHeld = false;
   brakeHeld = false;
+  resetJoystick();
   $("pedalGas").classList.remove("down");
   $("pedalBrake").classList.remove("down");
   $("carModeBtn").classList.toggle("car-on", on);
@@ -853,9 +859,16 @@ function setCarMode(on){
     $("togglePad").textContent = "D-Pad";
   }
   if (on) {
-    selectCarGear(carGearIdx, true);
+    carGearIdx = 2; // start in 1st gear
+    $("sensorOn").checked = false;
+    setting("E", 0, "Car Mode: Brake-Only Stop", true);
+    updateCarGearUI();
+    setDir(null);
     $("dirLabel").textContent = "STEER: 0\u00b0";
   } else {
+    setDir(null);
+    $("sensorOn").checked = true;
+    setting("E", 1, "Sensor on", true);
     $("txtGearBadge").textContent = "G2";
     $("dirLabel").textContent = "DIR: STOP";
   }
@@ -985,7 +998,7 @@ function send(code, name, quiet){
 
 // ---------- Periodic Telemetry Poll (!Q every 2.5s while idle) ----------
 setInterval(() => {
-  if (connected && !heldDir && !gasHeld) send("Q", "Telemetry", true);
+  if (connected && !heldDir && !gasHeld && !carRolling) send("Q", "Telemetry", true);
 }, 2500);
 
 // ---------- USB (Web Serial) ----------
@@ -1156,9 +1169,10 @@ function setDir(c){
   }
 }
 
-// Compute direction command in Car Mode from (gasHeld, brakeHeld, gear, steerAngle)
-function computeCarCommand(gas, brake, gearId, angle){
-  if (brake || !gas || gearId === "N") return null;
+// Compute direction command in Car Mode from (activeDrive, brakeHeld, gear, steerAngle)
+// activeDrive is true while gas is pressed OR while carRolling is true (coasting back to 1st gear; only Brake stops)
+function computeCarCommand(activeDrive, brake, gearId, angle){
+  if (brake || !activeDrive || gearId === "N") return null;
   if (gearId === "R") {
     if (angle < -24) return "B"; // Reverse-Left
     if (angle > 24)  return "N"; // Reverse-Right
@@ -1172,40 +1186,132 @@ function computeCarCommand(gas, brake, gearId, angle){
   return "U";                    // Forward Straight
 }
 
+function pwmToForwardGearIdx(pwm){
+  if (pwm >= 245) return 6; // 5th (255)
+  if (pwm >= 205) return 5; // 4th (215)
+  if (pwm >= 165) return 4; // 3rd (175)
+  if (pwm >= 125) return 3; // 2nd (135)
+  return 2;                 // 1st (95)
+}
+
+// Pure automatic transmission step:
+// - Holding gas ramps speed up (95 -> 255) and auto-upshifts 1st -> 2nd -> 3rd -> 4th -> 5th
+// - Releasing gas keeps carRolling = true, smoothly decelerates & downshifts back to 1st gear (95), and keeps rolling in 1st
+// - Only pressing Brake (or shifting to Neutral) sets rolling = false and stops the car
+function stepAutoGear(rolling, gas, brake, gearId, pwm){
+  if (brake || gearId === "N") {
+    return { rolling: false, pwm: 0, gearIdx: gearId === "N" ? 1 : (gearId === "R" ? 0 : 2) };
+  }
+  if (!rolling && !gas) {
+    return { rolling: false, pwm: 0, gearIdx: gearId === "R" ? 0 : 2 };
+  }
+  if (gearId === "R") {
+    const base = (!rolling && gas) ? 115 : Math.max(105, pwm || 115);
+    const nextPwm = gas ? clamp(base + 6, 105, 175) : clamp(base - 5, 105, 175);
+    return { rolling: true, pwm: nextPwm, gearIdx: 0 };
+  }
+  const startPwm = Math.max(95, pwm || 95);
+  const nextPwm = gas ? clamp(startPwm + 8, 95, 255) : clamp(startPwm - 6, 95, 255);
+  return { rolling: true, pwm: nextPwm, gearIdx: pwmToForwardGearIdx(nextPwm) };
+}
+
+function updateCarGearUI(){
+  const g = CAR_GEARS[carGearIdx];
+  document.querySelectorAll("#gearRail .gslot").forEach((b, i) => {
+    b.classList.toggle("active", i === carGearIdx);
+  });
+  $("txtGearBadge").textContent = g.id === "R" ? "R" : (g.id === "N" ? "N" : ("G" + g.id));
+  if (brakeHeld) {
+    $("gearReadout").textContent = `BRAKED: ${g.label} (0)`;
+    $("gasSub").textContent = "BRAKE ACTIVE";
+  } else if (g.id === "N") {
+    $("gearReadout").textContent = "GEAR: NEUTRAL";
+    $("gasSub").textContent = "NEUTRAL";
+  } else if (!carRolling) {
+    $("gearReadout").textContent = `READY: ${g.label} (STOP)`;
+    $("gasSub").textContent = g.id === "R" ? "HOLD: REVERSE" : "HOLD: AUTO SHIFT";
+  } else if (gasHeld) {
+    $("gearReadout").textContent = `ACCEL: ${g.label} (${carPwm})`;
+    $("gasSub").textContent = carGearIdx === 6 ? "MAX 5th GEAR" : `SHIFTING UP (${g.label})`;
+  } else if (g.id !== "R" && carPwm > 95) {
+    $("gearReadout").textContent = `DOWNSHIFT: ${g.label} (${carPwm})`;
+    $("gasSub").textContent = `SLOWING -> 1st`;
+  } else {
+    $("gearReadout").textContent = `ROLLING: ${g.label} (${carPwm})`;
+    $("gasSub").textContent = `ROLLING ${g.label}`;
+  }
+}
+
+function applyCarPwm(pwm, quiet, label){
+  const v = clamp(Math.round(pwm), 60, 255);
+  $("speed").value = v;
+  $("vSpeed").textContent = v;
+  if (carRolling) setSpeedGauge(v);
+  const isMilestone = (v === 95 || v === 135 || v === 175 || v === 215 || v === 255 || v === 105 || v === 175);
+  if (Math.abs(v - lastSentCarPwm) >= 12 || (isMilestone && v !== lastSentCarPwm) || label) {
+    lastSentCarPwm = v;
+    setting("V", v, label || ("Auto PWM " + v), quiet !== undefined ? quiet : true);
+  }
+}
+
 function syncCarDrive(){
   if (!carMode) return;
   const g = CAR_GEARS[carGearIdx];
   if (brakeHeld) {
     setDir(null);
-    $("dirLabel").textContent = "BRAKE HOLD";
+    $("dirLabel").textContent = "BRAKE STOP";
+    updateCarGearUI();
     return;
   }
   if (gasHeld && g.id === "N") {
     setDir(null);
     setSpeedGauge(110); // free neutral engine rev visual
     $("dirLabel").textContent = "NEUTRAL REV";
+    updateCarGearUI();
     return;
   }
-  const cmd = computeCarCommand(gasHeld, brakeHeld, g.id, steerAngle);
+  const activeDrive = carRolling || gasHeld;
+  const cmd = computeCarCommand(activeDrive, brakeHeld, g.id, steerAngle);
   setDir(cmd);
+  if (cmd && carRolling) {
+    setSpeedGauge(carPwm || g.pwm || 95);
+  }
   const steerTxt = Math.abs(steerAngle) < 8 ? "0\u00b0" : ((steerAngle > 0 ? "+" : "") + Math.round(steerAngle) + "\u00b0");
   $("dirLabel").textContent = (cmd ? (g.label + " " + DIR_NAMES[cmd].toUpperCase()) : ("STEER: " + steerTxt));
+  updateCarGearUI();
 }
 
 function selectCarGear(idx, quiet){
   carGearIdx = clamp(idx, 0, CAR_GEARS.length - 1);
   const g = CAR_GEARS[carGearIdx];
-  document.querySelectorAll("#gearRail .gslot").forEach((b, i) => {
-    b.classList.toggle("active", i === carGearIdx);
-  });
-  $("gearReadout").textContent = `GEAR: ${g.label} (${g.pwm})`;
-  $("txtGearBadge").textContent = g.id === "R" ? "R" : (g.id === "N" ? "N" : ("G" + g.id));
-  $("gasSub").textContent = g.id === "N" ? "NEUTRAL" : (g.id === "R" ? "REVERSE" : (g.label + " GEAR"));
-  if (g.pwm > 0) {
-    $("speed").value = g.pwm;
-    $("vSpeed").textContent = g.pwm;
-    setting("V", g.pwm, "Gear " + g.label + " (" + g.pwm + ")", quiet);
+  if (g.id === "N") {
+    carRolling = false;
+    carPwm = 0;
+    lastSentCarPwm = 0;
+    setDir(null);
+  } else if (g.id === "R") {
+    if (carRolling && heldDir && !["D", "B", "N"].includes(heldDir)) {
+      carRolling = false;
+      carPwm = 0;
+      setDir(null);
+    } else if (carRolling) {
+      carPwm = g.pwm;
+      applyCarPwm(carPwm, quiet, "Gear " + g.label + " (" + g.pwm + ")");
+    }
+  } else {
+    if (carRolling && ["D", "B", "N"].includes(heldDir)) {
+      carRolling = false;
+      carPwm = 0;
+      setDir(null);
+    } else if (carRolling) {
+      carPwm = g.pwm;
+      applyCarPwm(carPwm, quiet, "Gear " + g.label + " (" + g.pwm + ")");
+    } else {
+      $("speed").value = g.pwm;
+      $("vSpeed").textContent = g.pwm;
+    }
   }
+  updateCarGearUI();
   if (carMode) syncCarDrive();
 }
 
@@ -1215,6 +1321,29 @@ document.querySelectorAll("#gearRail .gslot").forEach((b, idx) => {
 $("gearDown").onclick = () => selectCarGear(carGearIdx - 1, false);
 $("gearUp").onclick   = () => selectCarGear(carGearIdx + 1, false);
 
+// ---------- Automatic Transmission Tick (Every 160ms in Car Mode) ----------
+setInterval(() => {
+  if (!carMode || brakeHeld) return;
+  const g = CAR_GEARS[carGearIdx];
+  if (g.id === "N") return;
+  if (!carRolling && !gasHeld) return;
+
+  const prevIdx = carGearIdx;
+  const prevPwm = carPwm;
+  const next = stepAutoGear(carRolling, gasHeld, brakeHeld, g.id, carPwm);
+  carRolling = next.rolling;
+  carPwm = next.pwm;
+  carGearIdx = next.gearIdx;
+
+  if (carGearIdx !== prevIdx) {
+    const shiftType = carGearIdx > prevIdx ? "Auto Upshift -> " : "Auto Downshift -> ";
+    applyCarPwm(carPwm, false, shiftType + CAR_GEARS[carGearIdx].label + " (" + carPwm + ")");
+  } else if (carPwm !== prevPwm) {
+    applyCarPwm(carPwm, true);
+  }
+  syncCarDrive();
+}, 160);
+
 // ---------- Gas & Brake Pedals (Multi-Touch Safe) ----------
 const pedalGas = $("pedalGas"), pedalBrake = $("pedalBrake");
 
@@ -1223,12 +1352,30 @@ pedalGas.addEventListener("pointerdown", e => {
   pedalGas.setPointerCapture(e.pointerId);
   gasHeld = true;
   pedalGas.classList.add("down");
+  if (carMode && !brakeHeld) {
+    const g = CAR_GEARS[carGearIdx];
+    if (g.id === "R") {
+      if (!carRolling) {
+        carRolling = true;
+        carPwm = 115;
+        applyCarPwm(carPwm, false, "Reverse Launch (115)");
+      }
+    } else if (g.id !== "N") {
+      if (!carRolling) {
+        carGearIdx = 2; // always launch from 1st gear
+        carPwm = 95;
+        carRolling = true;
+        applyCarPwm(carPwm, false, "Launch 1st Gear (95)");
+      }
+    }
+  }
   syncCarDrive();
 });
 function releaseGas(){
   if (!gasHeld) return;
   gasHeld = false;
   pedalGas.classList.remove("down");
+  // Do NOT stop on gas release: car stays rolling and auto-downshifts back to 1st gear
   syncCarDrive();
 }
 pedalGas.addEventListener("pointerup", releaseGas);
@@ -1238,8 +1385,12 @@ pedalBrake.addEventListener("pointerdown", e => {
   e.preventDefault();
   pedalBrake.setPointerCapture(e.pointerId);
   brakeHeld = true;
+  carRolling = false;
+  carPwm = 0;
+  lastSentCarPwm = 0;
+  if (carGearIdx > 2) carGearIdx = 2; // reset forward gearbox to 1st gear on full stop
   pedalBrake.classList.add("down");
-  send("O", "BRAKE");
+  setDir(null);
   syncCarDrive();
 });
 function releaseBrake(){
@@ -1371,7 +1522,17 @@ document.querySelectorAll(".gears button").forEach(b => {
   };
 });
 
-$("btnStop").addEventListener("pointerdown", e => { e.preventDefault(); resetJoystick(); releaseGas(); send("O", "STOP"); });
+$("btnStop").addEventListener("pointerdown", e => {
+  e.preventDefault();
+  carRolling = false;
+  carPwm = 0;
+  lastSentCarPwm = 0;
+  if (carGearIdx > 2) carGearIdx = 2;
+  resetJoystick();
+  releaseGas();
+  setDir(null);
+  if (carMode) updateCarGearUI();
+});
 $("btnAuto").onclick = () => send("4", "Auto Avoid Toggle");
 $("btnTrack").onclick = () => send("5", "Line Tracking Toggle");
 $("btnFollow").onclick = () => send("6", "Follow Mode Toggle");

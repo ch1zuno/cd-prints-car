@@ -369,6 +369,7 @@ void centerHead() {
 // Quick check before driving off: 3 readings straight ahead, blocked only if 2 or more are close
 bool pathClear() {
   if ((!sensorEnabled && !autoMode) || headManual) return true;
+  if (isForwardMove()) return true; // already moving forward; loop() checks obstacleAhead() without delay
   if (sweepAngle != 90) { centerHead(); delay(150); }
   int hits = 0;
   for (int i = 0; i < 3; i++) {
