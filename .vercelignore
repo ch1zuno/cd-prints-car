@@ -1,0 +1,6 @@
+# Exclude non-phone-remote files from Vercel deployment
+lafvin_2wd_car_standalone.ino
+pc_remote (5).html
+.vscode
+.git
+.gitignore

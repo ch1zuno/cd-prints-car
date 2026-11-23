@@ -28,9 +28,12 @@ A complete autonomous and telemetry-driven 2WD Smart Robot Car built on Arduino 
 
 ```
 .
-├── lafvin_2wd_car_standalone.ino   # Arduino firmware
+├── index.html                      # Primary entrypoint for Vercel / web hosting
 ├── phone_controller.html           # Phone cockpit web app (BLE / USB)
 ├── steering_wheel.png              # Transparent steering wheel asset
+├── vercel.json                     # Vercel routing, clean URLs & rewrites
+├── .vercelignore                   # Exclude non-web files from Vercel deploy
+├── lafvin_2wd_car_standalone.ino   # Arduino firmware
 ├── pc_remote (5).html              # PC remote control web app
 ├── .vscode/
 │   └── c_cpp_properties.json       # C/C++ editor configuration
@@ -46,8 +49,14 @@ A complete autonomous and telemetry-driven 2WD Smart Robot Car built on Arduino 
 3. Connect USB cable and click **Upload**.
 4. Disconnect USB when running on battery.
 
-### 2. Connect via Phone Controller
-1. Open `phone_controller.html` on your mobile browser (Chrome for Android recommended).
+### 2. Deploy to Vercel (Phone Remote Only)
+1. Push this repository to your GitHub account.
+2. Import the repository in [Vercel](https://vercel.com/new).
+3. Leave Framework Preset as **Other** (Root directory `./`).
+4. Click **Deploy**. Vercel will deploy the phone remote directly at `https://<project-name>.vercel.app/` over secure HTTPS (enabling Web Bluetooth).
+
+### 3. Connect via Phone Controller
+1. Open your Vercel URL (or `index.html`) on your mobile browser (Chrome for Android recommended).
 2. Tap **Bluetooth** -> **Connect**.
 3. Select **CD PRINTS CAR** from the pairing window.
 4. Drive with the steering wheel, shifter, and pedals!

@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/phone_controller", "destination": "/index.html" },
+    { "source": "/phone_controller.html", "destination": "/index.html" }
+  ]
+}

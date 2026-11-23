@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CD PRINTS CAR — Motorsport Cockpit</title>
+<style>
+:root{
+  --bg:#0b0e13;--carbon-a:#10141b;--carbon-b:#191f29;
+  --red-hi:#b81c24;--red-mid:#8f1219;--red-lo:#59090e;
+  --gold-1:#f3dca0;--gold-2:#c79b52;--gold-3:#735320;
+  --amber:#fbbf24;--green:#22c55e;--cyan:#38bdf8;--orange:#f97316;--crimson:#ef4444;
+  --fg:#f1f5f9;--mut:#94a3b8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{
+  margin:0;padding:0;width:100%;height:100dvh;overflow:hidden;
+  background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;touch-action:none;
+}
+.rotate-tip{display:none;background:#11141b;color:var(--amber);text-align:center;font-size:11px;padding:3px 8px;font-weight:700;letter-spacing:.5px;border-bottom:1px solid #334155}
+@media (orientation:portrait){.rotate-tip{display:block}}
+
+/* ===== TOP DARK GUNMETAL HEADER BAR ===== */
+.cowl{
+  height:40px;position:relative;display:flex;align-items:center;justify-content:space-between;
+  padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
+  gap:8px;
+  background:linear-gradient(180deg,#1c212b 0%,#10131a 60%,#090b0f 100%);
+  border-bottom:1.5px solid #2a313e;
+  box-shadow:0 4px 14px #000a;
+  z-index:5;
+}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:13px;letter-spacing:1.6px;white-space:nowrap;color:#f8fafc;text-shadow:0 0 8px #ffffff33}
+.led{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 35% 35%,#ffffff,#d1d5db 65%,#6b7280);
+  box-shadow:0 0 8px #ffffffaa;
+}
+.led.on{
+  background:radial-gradient(circle at 35% 35%,#bbf7d0,#22c55e 60%,#15803d);
+  box-shadow:0 0 11px #22c55e;
+}
+#st{
+  font-weight:800;color:#fecaca;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  background:linear-gradient(180deg,#3b0a0e,#1f0608);
+  padding:3px 10px;border-radius:99px;
+  border:1.5px solid #ef4444;
+  box-shadow:0 0 10px #ef444466,inset 0 0 6px #ef444433;
+}
+#st.live{
+  color:#bbf7d0;background:linear-gradient(180deg,#064e3b,#052e16);
+  border-color:#4ade80;box-shadow:0 0 10px #22c55e66,inset 0 0 6px #22c55e33;
+}
+.top-controls{display:flex;align-items:center;gap:6px;overflow-x:auto}
+.pill{
+  border:1.5px solid #475569;
+  background:linear-gradient(180deg,#2a313e 0%,#151921 100%);
+  color:#cbd5e1;padding:4px 11px;border-radius:99px;font-size:11px;font-weight:800;
+  letter-spacing:.3px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  box-shadow:0 2px 6px #0008,inset 0 1px 0 #ffffff22;
+}
+.pill:active{transform:scale(.95)}
+.pill.on{
+  background:linear-gradient(180deg,#991b1b,#450a0a);color:#fee2e2;
+  border-color:#ef4444;box-shadow:0 0 12px #ef444477,inset 0 1px 1px #fca5a555;
+}
+.pill.car-on{
+  background:linear-gradient(180deg,#b45309,#451a03);color:#fef08a;
+  border-color:#fbbf24;box-shadow:0 0 12px #f59e0b88,inset 0 1px 1px #fde68a66;
+}
+.pill.usb-lit{
+  background:linear-gradient(180deg,#64748b,#334155);color:#f8fafc;
+  border-color:#94a3b8;box-shadow:0 0 8px #94a3b866,inset 0 1px 0 #ffffff44;
+}
+.pill.conn{
+  background:linear-gradient(180deg,#166534,#052e16);color:#dcfce7;
+  border-color:#4ade80;box-shadow:0 0 12px #22c55e88,inset 0 1px 1px #86efac55;
+}
+.pill.disc{
+  background:linear-gradient(180deg,#991b1b,#450a0a);color:#fee2e2;
+  border-color:#f87171;box-shadow:0 0 12px #ef444488;
+}
+
+/* ===== CARBON-FIBER WEAVE COCKPIT ===== */
+.cockpit{
+  position:relative;height:calc(100dvh - 40px);width:100%;
+  display:grid;grid-template-columns:minmax(165px,1.02fr) minmax(235px,1.34fr) minmax(190px,1.06fr);
+  gap:10px;
+  padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));
+  background:
+    radial-gradient(ellipse 85% 70% at 50% 45%, transparent 45%, #000000cc 100%),
+    repeating-linear-gradient(45deg, #1b2029 0 2px, #0d1016 2px 5px),
+    repeating-linear-gradient(-45deg, #161b23 0 2px, #0a0d12 2px 5px);
+  background-blend-mode:normal,screen,normal;
+  overflow:hidden;
+}
+
+/* Bolted Anodized Crimson Metallic Fascia Plate behind Steering Wheel + Center Knobs/Plaque */
+.red-fascia{
+  position:absolute;left:0;top:21%;width:68%;height:57%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 45% at 52% 18%, #e12d3944 0%, transparent 70%),
+    linear-gradient(180deg,#a81a22 0%,#8a1118 48%,#5e090e 100%);
+  border-top:2px solid #d4424b88;
+  border-right:2px solid #45060a;
+  border-bottom:2px solid #3a0508;
+  border-radius:0 12px 12px 0;
+  box-shadow:0 10px 24px #000c,inset 0 1px 0 #ff9a9e44,inset 0 -3px 8px #0008;
+}
+.rivet{
+  position:absolute;width:8px;height:8px;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,#ffffff,#9ca3af 55%,#374151 100%);
+  border:1px solid #1f2937;box-shadow:0 1px 3px #000a,inset 0 1px 0 #fff;
+}
+.rivet::after{content:"";position:absolute;inset:2px;border-radius:50%;border:1px solid #475569}
+.rv-1{top:8px;left:43%}.rv-2{top:33%;left:49%}.rv-3{top:33%;right:10px}
+.rv-4{bottom:8px;left:49%}.rv-5{bottom:8px;right:10px}
+
+.left-zone,.center-zone,.right-zone{
+  position:relative;z-index:1;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:space-between;min-height:0;
+}
+
+/* ===== LEFT ZONE: CARBON & GOLD MOTORSPORT STEERING WHEEL ===== */
+.left-zone{padding:0 2px 2px}
+.zone-head{width:100%;display:flex;justify-content:space-between;align-items:center;gap:4px}
+.dir-badge{
+  font-size:9.5px;font-weight:800;letter-spacing:.6px;
+  background:linear-gradient(180deg,#1a1f28,#0d1016);color:#fde68a;
+  border:1px solid #475569;padding:3px 8px;border-radius:99px;
+  box-shadow:0 2px 6px #0009,inset 0 1px 0 #ffffff1a;white-space:nowrap;
+}
+.mini-chrome{
+  border:1px solid #475569;background:linear-gradient(180deg,#262d3a,#141820);
+  color:#e2e8f0;border-radius:99px;padding:3px 9px;font-size:9.5px;font-weight:800;
+  cursor:pointer;box-shadow:0 2px 5px #0008,inset 0 1px 0 #ffffff22;white-space:nowrap;
+}
+.mini-chrome:active{transform:scale(.95)}
+.mini-chrome.active{
+  background:linear-gradient(180deg,#b45309,#451a03);color:#fef08a;
+  border-color:#fbbf24;box-shadow:0 0 10px #f59e0b77;
+}
+
+.joy-wrap{
+  position:relative;width:min(202px,60dvh);height:min(202px,60dvh);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  touch-action:none;filter:drop-shadow(0 10px 18px #000c);
+}
+.wheel-svg{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 18px #000c);
+  transition:transform .12s ease-out;
+  transform-origin:center center;
+}
+.joy-wrap.turning .wheel-svg{transition:none}
+.joy-wrap.car-mode .sector-lbl{opacity:0}
+.joy-wrap.car-mode .joy-stick{display:none}
+.sector-lbl{
+  position:absolute;font-size:9.5px;color:#ffffff55;pointer-events:none;font-weight:900;
+  text-shadow:0 1px 3px #000;z-index:2;transition:color .1s,transform .1s,opacity .15s;
+}
+.sector-lbl.active{color:#fde047;transform:scale(1.35);text-shadow:0 0 8px #fde047}
+.s-u{top:19px;left:50%;transform:translateX(-50%)}
+.s-d{bottom:19px;left:50%;transform:translateX(-50%)}
+.s-l{left:20px;top:50%;transform:translateY(-50%)}
+.s-r{right:20px;top:50%;transform:translateY(-50%)}
+.s-ul{top:34px;left:35px}.s-ur{top:34px;right:35px}
+.s-dl{bottom:34px;left:35px}.s-dr{bottom:34px;right:35px}
+
+/* Red Anodized Joystick Puck (Default Mode only) */
+.joy-stick{
+  position:relative;z-index:3;width:56px;height:56px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ef4444,#b91c1c 55%,#59090e 100%);
+  border:2px solid #fca5a5;
+  box-shadow:0 6px 16px #000c,0 0 12px #ef444455,inset 0 2px 3px #ffffff88;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;transition:transform .04s linear;
+}
+.joy-stick::after{
+  content:"CD";font-size:11px;font-weight:900;letter-spacing:1px;color:#f8fafc;
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,#1e293b,#090c10 80%);
+  border:1.5px solid #64748b;box-shadow:inset 0 1px 2px #ffffff44;
+  text-shadow:0 1px 2px #000;
+}
+.joy-stick.idle{transition:transform .14s ease-out}
+
+.dpad8{
+  display:none;width:min(190px,56dvh);height:min(190px,56dvh);
+  grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:5px;
+  background:#0f131acc;padding:6px;border-radius:16px;border:1.5px solid #475569;
+  box-shadow:0 8px 18px #000a;
+}
+.dpad8 button{
+  background:linear-gradient(180deg,#262d3b,#12161e);border:1.5px solid #64748b;
+  color:#f8fafc;border-radius:10px;font-size:16px;font-weight:800;touch-action:none;
+  box-shadow:0 3px 6px #0008,inset 0 1px 0 #ffffff22;
+}
+.dpad8 button.down{background:linear-gradient(180deg,#fbbf24,#b45309);color:#111;border-color:#fef08a;transform:scale(.94)}
+.dpad8 button.ok{background:linear-gradient(180deg,#dc2626,#7f1d1d);color:#fff;font-size:11px;border-color:#fca5a5}
+
+.wheel-foot{
+  font-size:9.5px;font-weight:800;letter-spacing:.7px;color:#cbd5e1;
+  background:linear-gradient(180deg,#1c212b,#0d1016);padding:3px 12px;border-radius:99px;
+  border:1px solid #334155;box-shadow:0 2px 6px #0009;
+}
+
+/* ===== CENTER ZONE: 3 NEON GAUGES + 4 KNURLED KNOBS + PLAQUE + TICKER ===== */
+.center-zone{padding:0 2px 2px;justify-content:space-between;gap:4px}
+
+.gauges{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-items:center}
+.gauge-card{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge-svg{
+  width:min(102px,31dvh);height:min(102px,31dvh);
+  filter:drop-shadow(0 6px 12px #000c);
+}
+.needle{transition:transform .22s cubic-bezier(.2,.8,.2,1);transform-origin:50px 52px}
+.warn-led{fill:#3b0a0a;transition:fill .2s}
+.warn-led.low{fill:#ff2a2a;filter:drop-shadow(0 0 5px #ff2a2a)}
+
+/* Row of 4 Machined-Aluminum Knurled Rotary Knobs with Backlit Arc Halo */
+.toggle-bank{
+  width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+  padding:4px 6px 0;
+}
+.c-switch{
+  display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;
+}
+.c-switch input{position:absolute;opacity:0;pointer-events:none}
+.knob-wrap{
+  width:38px;height:38px;border-radius:50%;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle,#11141a 55%,transparent 72%);
+}
+.knob-halo{
+  position:absolute;inset:1px;border-radius:50%;
+  border:2px solid transparent;
+  border-top-color:#ffffff33;border-left-color:#ffffff22;
+  opacity:.35;transition:opacity .16s,filter .16s,border-color .16s;
+}
+.c-switch.amber input:checked + .knob-wrap .knob-halo{
+  border-top-color:#fde047;border-left-color:#fb923c;
+  opacity:1;filter:drop-shadow(0 0 5px #f59e0b);
+}
+.c-switch.cool input:checked + .knob-wrap .knob-halo{
+  border-top-color:#e0f2fe;border-right-color:#7dd3fc;
+  opacity:1;filter:drop-shadow(0 0 5px #38bdf8);
+}
+.knob-cap{
+  width:26px;height:26px;border-radius:50%;position:relative;
+  background:conic-gradient(from 30deg,#cbd5e1,#475569,#f8fafc,#334155,#e2e8f0,#64748b,#cbd5e1);
+  border:1.5px solid #1e293b;
+  box-shadow:0 4px 8px #000b,inset 0 1px 2px #fff;
+  transform:rotate(-38deg);
+  transition:transform .16s cubic-bezier(.2,.9,.3,1);
+}
+.knob-cap::after{
+  content:"";position:absolute;top:2px;left:50%;width:2.2px;height:8px;border-radius:2px;
+  background:#0f172a;transform:translateX(-50%);box-shadow:0 0 2px #fff8;
+}
+.c-switch input:checked + .knob-wrap .knob-cap{transform:rotate(38deg)}
+.sw-dot{
+  width:5px;height:5px;border-radius:50%;background:#2b0c0e;border:1px solid #000a;
+  transition:background .15s,box-shadow .15s;
+}
+.c-switch input:checked ~ .sw-dot{background:#4ade80;box-shadow:0 0 7px #22c55e}
+.sw-lbl{font-size:8.5px;font-weight:800;letter-spacing:.7px;color:#f1f5f9;text-shadow:0 1px 3px #000}
+
+/* Riveted Brushed-Aluminum CD PRINTS CAR Plaque */
+.plaque{
+  width:84%;max-width:245px;padding:5px 14px;border-radius:4px;position:relative;
+  background:linear-gradient(180deg,#e2e8f0 0%,#b8c2cf 45%,#94a3b8 55%,#cbd5e1 100%);
+  border:1.5px solid #475569;
+  box-shadow:0 5px 12px #000b,inset 0 1px 0 #ffffffcc,inset 0 -1px 2px #334155;
+  text-align:center;
+}
+.plaque-txt{
+  font-size:12px;font-weight:900;letter-spacing:2.4px;color:#1e293b;
+  text-shadow:0 1px 0 #ffffffaa;
+}
+.plaque::before,.plaque::after{
+  content:"";position:absolute;top:50%;width:7px;height:7px;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,#fff,#64748b 65%,#1e293b);
+  border:1px solid #334155;transform:translateY(-50%);
+  box-shadow:inset 0 1px 0 #fff,0 1px 2px #0007;
+}
+.plaque::before{left:7px}.plaque::after{right:7px}
+
+/* Recessed LCD Status Ticker on Carbon Weave */
+.ticker{
+  font-size:10px;font-family:Consolas,monospace;color:#fde68a;font-weight:700;
+  background:linear-gradient(180deg,#090b0f,#141820);
+  padding:4px 12px;border-radius:7px;max-width:94%;min-width:65%;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border:1.5px solid #334155;box-shadow:inset 0 2px 6px #000,0 2px 6px #0009;
+}
+
+/* ===== RIGHT ZONE: DARK ANODIZED CONTROL MODULE ===== */
+.right-zone{
+  padding:7px;border-radius:14px;
+  background:linear-gradient(180deg,#1e2430 0%,#12161f 55%,#0c0f15 100%);
+  border:1.5px solid #3c4657;
+  box-shadow:0 10px 22px #000c,inset 0 1px 0 #ffffff22;
+  gap:6px;justify-content:flex-start;
+}
+.rtabs{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.rtab{
+  border:1.5px solid #475569;border-radius:8px;padding:5px 3px;font-size:9.5px;font-weight:900;
+  background:linear-gradient(180deg,#252c38,#141821);color:#94a3b8;cursor:pointer;letter-spacing:.4px;
+  transition:box-shadow .15s,border-color .15s,color .15s;
+}
+#tabDrive.active{
+  color:#fff;border-color:#f87171;
+  background:linear-gradient(180deg,#3b1d24,#1a1116);
+  box-shadow:0 0 12px #ef444466,inset 0 1px 0 #fca5a544;
+}
+#tabCar{border-color:#f59e0b66;color:#fde68a}
+#tabCar.active{
+  color:#fff;border-color:#fbbf24;
+  background:linear-gradient(180deg,#452708,#1c1004);
+  box-shadow:0 0 12px #f59e0b77,inset 0 1px 0 #fde68a44;
+}
+#tabTune{border-color:#0ea5e966;color:#bae6fd}
+#tabTune.active{
+  color:#fff;border-color:#38bdf8;
+  background:linear-gradient(180deg,#112d42,#0c1926);
+  box-shadow:0 0 12px #38bdf877,inset 0 1px 0 #bae6fd44;
+}
+.rpanel{width:100%;flex:1;display:none;flex-direction:column;justify-content:space-between;gap:5px;min-height:0}
+.rpanel.active{display:flex}
+
+/* 2x2 Neon-Bordered Mode Grid */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mbtn{
+  padding:8px 4px;border-radius:9px;border:1.5px solid #475569;
+  background:linear-gradient(180deg,#232936,#12161e);color:#f8fafc;
+  font-size:11px;font-weight:900;letter-spacing:.7px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  box-shadow:0 3px 8px #0009,inset 0 1px 0 #ffffff1a;
+}
+.mbtn:active{transform:scale(.95)}
+.mbtn .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mbtn.auto{border-color:#eab308;box-shadow:0 0 10px #eab30844,inset 0 0 8px #eab3081a}
+.mbtn.auto .dot{background:#fde047;box-shadow:0 0 7px #fde047}
+.mbtn.line{border-color:#3b82f6;box-shadow:0 0 10px #3b82f644,inset 0 0 8px #3b82f61a}
+.mbtn.line .dot{background:#60a5fa;box-shadow:0 0 7px #60a5fa}
+.mbtn.follow{border-color:#22c55e;box-shadow:0 0 10px #22c55e44,inset 0 0 8px #22c55e1a}
+.mbtn.follow .dot{background:#4ade80;box-shadow:0 0 7px #4ade80}
+.mbtn.light{border-color:#f97316;box-shadow:0 0 10px #f9731644,inset 0 0 8px #f973161a}
+.mbtn.light .dot{background:#fb923c;box-shadow:0 0 7px #fb923c}
+
+/* Slim 3-Gear Bar (Default DRIVE mode) */
+.gears{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.gears button{
+  padding:4px 2px;border-radius:7px;border:1px solid #475569;
+  background:linear-gradient(180deg,#252c38,#131720);color:#94a3b8;
+  font-size:9.5px;font-weight:900;letter-spacing:.4px;cursor:pointer;
+  box-shadow:0 2px 5px #0008,inset 0 1px 0 #ffffff18;
+}
+.gears button.active{
+  color:#fef08a;border-color:#f59e0b;
+  background:linear-gradient(180deg,#452708,#1e1104);
+  box-shadow:0 0 9px #f59e0b66,inset 0 1px 0 #fde68a44;
+}
+
+/* Matte Dark Steel Diagnostic Buttons */
+.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.dbtn{
+  padding:5px 2px;border-radius:7px;border:1px solid #4b5563;
+  background:linear-gradient(180deg,#2e3543,#191d26);color:#cbd5e1;
+  font-size:9px;font-weight:800;letter-spacing:.4px;cursor:pointer;
+  box-shadow:0 2px 5px #0008,inset 0 1px 0 #ffffff22;
+}
+.dbtn:active{transform:scale(.95);color:#fff;border-color:#94a3b8}
+
+/* Industrial Hazard-Stripe STOP / BRAKE Guard Module */
+.stop-guard{
+  position:relative;width:100%;border-radius:10px;padding:15px 10px 7px;
+  background:repeating-linear-gradient(-45deg,#b91c1c 0 7px,#180709 7px 14px);
+  border:1.5px solid #ef444488;
+  box-shadow:0 6px 16px #000b,inset 0 1px 0 #fca5a544;
+  overflow:hidden;
+}
+.stop-guard::before{
+  content:"\26A0";position:absolute;top:1px;left:50%;transform:translateX(-50%);
+  font-size:11px;line-height:1;color:#fca5a5;text-shadow:0 0 6px #ef4444;
+  background:#1f0709cc;padding:0 5px;border-radius:4px;
+}
+.stop-bracket{
+  position:absolute;bottom:0;top:14px;width:13px;
+  background:linear-gradient(180deg,#cbd5e1,#64748b 55%,#334155);
+  border-top:1px solid #f8fafc;
+}
+.stop-bracket.l{left:0;border-right:1px solid #1e293b}
+.stop-bracket.r{right:0;border-left:1px solid #1e293b}
+.stop-bracket::before,.stop-bracket::after{
+  content:"";position:absolute;left:3.5px;width:5px;height:5px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#fff,#334155);border:1px solid #1e293b;
+}
+.stop-bracket::before{top:4px}.stop-bracket::after{bottom:4px}
+
+.stop-pedal{
+  position:relative;z-index:2;width:100%;padding:8px 4px;border-radius:7px;
+  border:1.5px solid #fca5a5;
+  background:linear-gradient(180deg,#ef4444 0%,#b91c1c 55%,#7f1d1d 100%);
+  color:#fff;font-size:12px;font-weight:900;letter-spacing:1.4px;cursor:pointer;
+  box-shadow:0 0 16px #ef4444aa,inset 0 2px 3px #ffffff55;
+  text-shadow:0 1px 3px #000a;touch-action:none;
+}
+.stop-pedal:active{transform:scale(.96);filter:brightness(1.18)}
+
+/* ===== TAB 2: CAR MODE — 5-SPEED + R/N GEARBOX & GAS / BRAKE PEDALS ===== */
+.gearbox{
+  display:flex;flex-direction:column;gap:4px;
+  background:linear-gradient(180deg,#151922,#0b0e14);
+  border:1px solid #334155;border-radius:10px;padding:5px 6px;
+  box-shadow:inset 0 2px 6px #000a;
+}
+.gear-top{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.gear-readout{
+  font-size:10px;font-weight:900;letter-spacing:.7px;color:#fde047;
+  font-family:Consolas,monospace;
+}
+.seq-btns{display:flex;gap:4px}
+.seq-btn{
+  padding:3px 9px;border-radius:6px;border:1px solid #64748b;
+  background:linear-gradient(180deg,#334155,#1e293b);color:#f8fafc;
+  font-size:10px;font-weight:900;cursor:pointer;
+}
+.seq-btn:active{transform:scale(.93)}
+.gear-rail{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.gslot{
+  padding:6px 0;border-radius:6px;border:1.5px solid #334155;
+  background:linear-gradient(180deg,#222733,#11141c);color:#94a3b8;
+  font-size:10.5px;font-weight:900;cursor:pointer;text-align:center;
+  box-shadow:0 2px 4px #0008;
+}
+.gslot.r{color:#fca5a5}
+.gslot.n{color:#cbd5e1}
+.gslot.active{
+  color:#111827;border-color:#fef08a;
+  background:linear-gradient(180deg,#fde047,#d97706);
+  box-shadow:0 0 10px #f59e0b99;
+}
+.gslot.r.active{
+  color:#fff;border-color:#fca5a5;
+  background:linear-gradient(180deg,#ef4444,#991b1b);
+  box-shadow:0 0 10px #ef444499;
+}
+
+/* Footwell with realistic BRAKE & GAS pedals (No Clutch) */
+.pedal-well{
+  flex:1;display:grid;grid-template-columns:1fr 1.15fr;gap:8px;
+  padding:6px 8px;border-radius:11px;min-height:0;
+  background:
+    radial-gradient(circle at 50% 100%,#1e293b44,transparent 70%),
+    repeating-linear-gradient(90deg,#0c0f15 0 4px,#080a0e 4px 8px);
+  border:1.5px solid #262e3d;
+  box-shadow:inset 0 6px 14px #000e;
+  align-items:stretch;
+}
+.pedal{
+  position:relative;border-radius:12px;cursor:pointer;touch-action:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:8px 6px;
+  transition:transform .07s ease,box-shadow .07s ease,filter .07s ease;
+  transform-origin:bottom center;
+}
+/* Left Pedal: BRAKE (wide brushed metal + horizontal rubber grip ribs) */
+.pedal-brake{
+  border:2px solid #f87171;
+  background:
+    repeating-linear-gradient(180deg,transparent 0 9px,#0f131a99 9px 14px),
+    linear-gradient(180deg,#7f1d1d 0%,#450a0a 55%,#2a0709 100%);
+  box-shadow:0 7px 14px #000c,0 0 10px #ef444433,inset 0 2px 2px #fca5a566;
+}
+.pedal-brake.down{
+  transform:perspective(220px) rotateX(14deg) scale(.96);
+  border-color:#fecaca;
+  box-shadow:0 2px 6px #000,0 0 22px #ef4444cc,inset 0 0 12px #ef444488;
+  filter:brightness(1.25);
+}
+/* Right Pedal: GAS / ACCELERATOR (drilled brushed-aluminum sport pedal) */
+.pedal-gas{
+  border:2px solid #4ade80;
+  background:
+    radial-gradient(circle at 30% 35%,#090d12 4px,transparent 5px),
+    radial-gradient(circle at 70% 35%,#090d12 4px,transparent 5px),
+    radial-gradient(circle at 30% 55%,#090d12 4px,transparent 5px),
+    radial-gradient(circle at 70% 55%,#090d12 4px,transparent 5px),
+    radial-gradient(circle at 50% 45%,#090d12 4px,transparent 5px),
+    linear-gradient(180deg,#94a3b8 0%,#475569 48%,#1e293b 100%);
+  box-shadow:0 7px 14px #000c,0 0 10px #22c55e33,inset 0 2px 3px #ffffff88;
+}
+.pedal-gas.down{
+  transform:perspective(220px) rotateX(16deg) scale(.96);
+  border-color:#bbf7d0;
+  box-shadow:0 2px 6px #000,0 0 24px #22c55ecc,inset 0 0 14px #22c55e66;
+  filter:brightness(1.2);
+}
+.pedal-title{
+  font-size:12px;font-weight:900;letter-spacing:1.4px;color:#fff;
+  text-shadow:0 1px 4px #000;
+}
+.pedal-sub{
+  font-size:8.5px;font-weight:800;letter-spacing:.6px;padding:2px 7px;
+  border-radius:99px;background:#090c10cc;color:#e2e8f0;border:1px solid #ffffff33;
+}
+
+/* Tune & Log Panel */
+.sliders{display:flex;flex-direction:column;gap:4px;font-size:10px}
+.sbox{
+  background:linear-gradient(180deg,#1b202b,#11151d);
+  padding:5px 8px;border-radius:8px;border:1px solid #334155;
+}
+.sbox label{display:flex;justify-content:space-between;color:#cbd5e1;font-weight:700}
+.sbox b{color:#fde68a}
+.sbox input[type=range]{width:100%;margin:2px 0 0;accent-color:#ef4444;touch-action:pan-x}
+#log{
+  background:#07090d;color:#4ade80;font:10px/1.3 Consolas,monospace;
+  flex:1;min-height:56px;overflow-y:auto;border-radius:8px;padding:6px 8px;margin:0;
+  white-space:pre-wrap;border:1.5px solid #334155;box-shadow:inset 0 2px 8px #000;
+}
+</style>
+</head>
+<body>
+
+<div class="rotate-tip">Rotate phone to LANDSCAPE for Motorsport Cockpit view</div>
+
+<!-- DARK GUNMETAL TOP HEADER -->
+<div class="cowl">
+  <div class="brand">
+    <div class="led" id="led"></div>
+    <span>CD PRINTS CAR</span>
+    <span id="st">DEMO</span>
+  </div>
+  <div class="top-controls">
+    <button class="pill" id="carModeBtn">Car Mode</button>
+    <button class="pill on" id="mBle">Bluetooth</button>
+    <button class="pill usb-lit" id="mUsb">USB</button>
+    <button class="pill conn" id="conn">Connect</button>
+    <button class="pill" id="fsBtn">Full</button>
+  </div>
+</div>
+
+<!-- CARBON-FIBER & ANODIZED RED MOTORSPORT COCKPIT -->
+<div class="cockpit">
+  <div class="red-fascia" aria-hidden="true">
+    <span class="rivet rv-1"></span>
+    <span class="rivet rv-2"></span>
+    <span class="rivet rv-3"></span>
+    <span class="rivet rv-4"></span>
+    <span class="rivet rv-5"></span>
+  </div>
+
+  <!-- LEFT: CARBON & CHAMPAGNE-GOLD MOTORSPORT STEERING WHEEL -->
+  <div class="left-zone">
+    <div class="zone-head">
+      <span class="dir-badge" id="dirLabel">DIR: STOP</span>
+      <button class="mini-chrome" id="togglePad">D-Pad</button>
+    </div>
+
+    <div class="joy-wrap" id="joyWrap">
+      <img class="wheel-svg" id="wheelSvg" src="steering_wheel.png" alt="Steering Wheel">
+
+      <span class="sector-lbl s-u" data-s="U">▲</span>
+      <span class="sector-lbl s-ur" data-s="G">↗</span>
+      <span class="sector-lbl s-r" data-s="R">▶</span>
+      <span class="sector-lbl s-dr" data-s="N">↘</span>
+      <span class="sector-lbl s-d" data-s="D">▼</span>
+      <span class="sector-lbl s-dl" data-s="B">↙</span>
+      <span class="sector-lbl s-l" data-s="L">◀</span>
+      <span class="sector-lbl s-ul" data-s="F">↖</span>
+      <div class="joy-stick idle" id="joyStick"></div>
+    </div>
+
+    <div class="dpad8" id="dpad8">
+      <button class="k" data-c="F" data-n="Upper Left">↖</button>
+      <button class="k" data-c="U" data-n="Forward">▲</button>
+      <button class="k" data-c="G" data-n="Upper Right">↗</button>
+      <button class="k" data-c="L" data-n="Left">◀</button>
+      <button class="k ok" data-c="O" data-n="Stop">STOP</button>
+      <button class="k" data-c="R" data-n="Right">▶</button>
+      <button class="k" data-c="B" data-n="Lower Left">↙</button>
+      <button class="k" data-c="D" data-n="Backward">▼</button>
+      <button class="k" data-c="N" data-n="Lower Right">↘</button>
+    </div>
+
+    <div class="wheel-foot" id="wheelFoot">360° COBRA S.</div>
+  </div>
+
+  <!-- CENTER: 3 NEON CHROME GAUGES + 4 KNURLED KNOBS + RIVETED PLAQUE + TICKER -->
+  <div class="center-zone">
+
+    <!-- 3 LUMINOUS CHROME-BEZEL ANALOG GAUGES -->
+    <div class="gauges">
+      <!-- 1. SPEEDOMETER (AMBER-ORANGE GLOW + GEAR WINDOW) -->
+      <div class="gauge-card">
+        <svg class="gauge-svg" id="gaugeSpeed" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="cBez" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f8fafc"/><stop offset="35%" stop-color="#94a3b8"/>
+              <stop offset="70%" stop-color="#334155"/><stop offset="100%" stop-color="#e2e8f0"/>
+            </linearGradient>
+            <radialGradient id="gSpdBg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2a160c"/><stop offset="70%" stop-color="#0e0d12"/><stop offset="100%" stop-color="#f9731644"/>
+            </radialGradient>
+            <radialGradient id="gFuelBg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#0d2616"/><stop offset="70%" stop-color="#0c1012"/><stop offset="100%" stop-color="#22c55e44"/>
+            </radialGradient>
+            <radialGradient id="gSonBg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#0b2233"/><stop offset="70%" stop-color="#0b0f14"/><stop offset="100%" stop-color="#38bdf844"/>
+            </radialGradient>
+            <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="1.8" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx="50" cy="50" r="47.5" fill="url(#cBez)" stroke="#090c10" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="41" fill="url(#gSpdBg)" stroke="#f9731666" stroke-width="1"/>
+          <path d="M21 69 A34 34 0 1 1 79 69" fill="none" stroke="#fb923c" stroke-width="3.6" stroke-linecap="round" filter="url(#neonGlow)"/>
+          <path d="M68 23 A34 34 0 0 1 79 69" fill="none" stroke="#ef4444" stroke-width="3.8" stroke-linecap="round"/>
+          <text x="50" y="30" text-anchor="middle" fill="#fed7aa" font-size="7.6" font-weight="800" letter-spacing="0.5">SPEED</text>
+          <text x="21" y="77" text-anchor="middle" fill="#fdba74" font-size="6.8" font-weight="800">0</text>
+          <text x="50" y="21" text-anchor="middle" fill="#fdba74" font-size="6.8" font-weight="800">128</text>
+          <text x="78" y="77" text-anchor="middle" fill="#f87171" font-size="6.8" font-weight="800">255</text>
+          <!-- Digital Gear Window inside Speedometer -->
+          <rect x="42" y="60" width="16" height="11" rx="2" fill="#090b10" stroke="#fb923c66" stroke-width="0.8"/>
+          <text x="50" y="68.3" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="900" id="txtGearBadge">G2</text>
+          <g class="needle" id="needleSpeed" style="transform:rotate(-125deg)">
+            <line x1="50" y1="54" x2="50" y2="19" stroke="#ff4d2e" stroke-width="2.6" stroke-linecap="round" filter="url(#neonGlow)"/>
+          </g>
+          <circle cx="50" cy="52" r="4.8" fill="url(#cBez)" stroke="#111" stroke-width="1"/>
+          <text x="50" y="83" text-anchor="middle" fill="#fde047" font-size="10" font-weight="900" id="txtSpeed">0</text>
+        </svg>
+      </div>
+
+      <!-- 2. FUEL / BATTERY HEALTH (GREEN-YELLOW GLOW) -->
+      <div class="gauge-card">
+        <svg class="gauge-svg" id="gaugeFuel" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="47.5" fill="url(#cBez)" stroke="#090c10" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="41" fill="url(#gFuelBg)" stroke="#4ade8066" stroke-width="1"/>
+          <path d="M21 69 A34 34 0 0 1 35 20" fill="none" stroke="#facc15" stroke-width="3.8" stroke-linecap="round" filter="url(#neonGlow)"/>
+          <path d="M35 20 A34 34 0 0 1 79 69" fill="none" stroke="#22c55e" stroke-width="3.8" stroke-linecap="round" filter="url(#neonGlow)"/>
+          <text x="50" y="31" text-anchor="middle" fill="#dcfce7" font-size="7.4" font-weight="800">FUEL/BAT</text>
+          <text x="21" y="77" text-anchor="middle" fill="#facc15" font-size="8" font-weight="900">E</text>
+          <text x="50" y="21" text-anchor="middle" fill="#bbf7d0" font-size="6.8" font-weight="800">1/2</text>
+          <text x="79" y="77" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="900">F</text>
+          <circle cx="50" cy="67" r="3" class="warn-led" id="lowFuelLed"/>
+          <g class="needle" id="needleFuel" style="transform:rotate(0deg)">
+            <line x1="50" y1="54" x2="50" y2="19" stroke="#fde047" stroke-width="2.6" stroke-linecap="round" filter="url(#neonGlow)"/>
+          </g>
+          <circle cx="50" cy="52" r="4.8" fill="url(#cBez)" stroke="#111" stroke-width="1"/>
+          <text x="50" y="83" text-anchor="middle" fill="#86efac" font-size="9" font-weight="900" id="txtFuel">--V</text>
+        </svg>
+      </div>
+
+      <!-- 3. SONAR DISTANCE (CYAN-BLUE GLOW) -->
+      <div class="gauge-card">
+        <svg class="gauge-svg" id="gaugeSonar" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="47.5" fill="url(#cBez)" stroke="#090c10" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="41" fill="url(#gSonBg)" stroke="#38bdf866" stroke-width="1"/>
+          <path d="M21 69 A34 34 0 0 1 35 20" fill="none" stroke="#ef4444" stroke-width="3.8" stroke-linecap="round" filter="url(#neonGlow)"/>
+          <path d="M35 20 A34 34 0 0 1 79 69" fill="none" stroke="#38bdf8" stroke-width="3.8" stroke-linecap="round" filter="url(#neonGlow)"/>
+          <text x="50" y="31" text-anchor="middle" fill="#bae6fd" font-size="7.6" font-weight="800">SONAR</text>
+          <text x="21" y="77" text-anchor="middle" fill="#f87171" font-size="6.8" font-weight="800">0</text>
+          <text x="50" y="21" text-anchor="middle" fill="#bae6fd" font-size="6.8" font-weight="800">40</text>
+          <text x="77" y="77" text-anchor="middle" fill="#38bdf8" font-size="6.6" font-weight="800">80+</text>
+          <g class="needle" id="needleSonar" style="transform:rotate(125deg)">
+            <line x1="50" y1="54" x2="50" y2="19" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round" filter="url(#neonGlow)"/>
+          </g>
+          <circle cx="50" cy="52" r="4.8" fill="url(#cBez)" stroke="#111" stroke-width="1"/>
+          <text x="50" y="83" text-anchor="middle" fill="#7dd3fc" font-size="9" font-weight="900" id="txtSonar">CLR</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 4 MACHINED-ALUMINUM ROTARY KNOBS WITH GLOWING ARC HALOS -->
+    <div class="toggle-bank">
+      <label class="c-switch amber" title="Obstacle Stop">
+        <input type="checkbox" id="sensorOn" checked>
+        <span class="knob-wrap"><span class="knob-halo"></span><span class="knob-cap"></span></span>
+        <span class="sw-dot"></span>
+        <span class="sw-lbl">OBST</span>
+      </label>
+      <label class="c-switch amber" title="Servo Sweep">
+        <input type="checkbox" id="sweepOn" checked>
+        <span class="knob-wrap"><span class="knob-halo"></span><span class="knob-cap"></span></span>
+        <span class="sw-dot"></span>
+        <span class="sw-lbl">SWEEP</span>
+      </label>
+      <label class="c-switch cool" title="Flip Servo Aim">
+        <input type="checkbox" id="flip">
+        <span class="knob-wrap"><span class="knob-halo"></span><span class="knob-cap"></span></span>
+        <span class="sw-dot"></span>
+        <span class="sw-lbl">FLIP</span>
+      </label>
+      <label class="c-switch cool" title="Invert Line Sensor">
+        <input type="checkbox" id="trackInv">
+        <span class="knob-wrap"><span class="knob-halo"></span><span class="knob-cap"></span></span>
+        <span class="sw-dot"></span>
+        <span class="sw-lbl">INV LN</span>
+      </label>
+    </div>
+
+    <!-- RIVETED BRUSHED-ALUMINUM PLAQUE -->
+    <div class="plaque"><div class="plaque-txt">CD PRINTS CAR</div></div>
+
+    <!-- RECESSED LCD STATUS TICKER -->
+    <div class="ticker" id="ticker">[demo] Ready. Connect BLE or USB.</div>
+  </div>
+
+  <!-- RIGHT: DARK ANODIZED CONTROL MODULE -->
+  <div class="right-zone">
+    <div class="rtabs">
+      <button class="rtab active" id="tabDrive">DRIVE</button>
+      <button class="rtab" id="tabCar">CAR PEDALS</button>
+      <button class="rtab" id="tabTune">TUNE/LOG</button>
+    </div>
+
+    <!-- TAB 1: DEFAULT MODES, GEARS, DIAGNOSTICS & HAZARD STOP GUARD -->
+    <div class="rpanel active" id="panelDrive">
+      <div class="mode-grid">
+        <button class="mbtn auto" id="btnAuto"><span class="dot"></span>AUTO</button>
+        <button class="mbtn line" id="btnTrack"><span class="dot"></span>LINE</button>
+        <button class="mbtn follow" id="btnFollow"><span class="dot"></span>FOLLOW</button>
+        <button class="mbtn light" id="btnLight"><span class="dot"></span>LIGHT</button>
+      </div>
+
+      <div class="gears">
+        <button id="g1" data-g="1" data-v="120">1 SLOW</button>
+        <button id="g2" data-g="2" data-v="180" class="active">2 MED</button>
+        <button id="g3" data-g="3" data-v="255">3 FAST</button>
+      </div>
+
+      <div class="diag-grid">
+        <button class="dbtn" id="btnPing">PING</button>
+        <button class="dbtn" id="btnBatt">BATT</button>
+        <button class="dbtn" id="btnTest">MOTOR</button>
+        <button class="dbtn" id="btnTrackTest">LN CHK</button>
+        <button class="dbtn" id="btnSensorTest" style="grid-column:span 2">LIGHT / IR CHK</button>
+      </div>
+
+      <div class="stop-guard">
+        <span class="stop-bracket l" aria-hidden="true"></span>
+        <span class="stop-bracket r" aria-hidden="true"></span>
+        <button class="stop-pedal" id="btnStop">STOP / BRAKE</button>
+      </div>
+    </div>
+
+    <!-- TAB 2: CAR MODE — 5-SPEED + R/N GEARBOX & GAS / BRAKE PEDALS (NO CLUTCH) -->
+    <div class="rpanel" id="panelCar">
+      <div class="gearbox">
+        <div class="gear-top">
+          <span class="gear-readout" id="gearReadout">GEAR: 1st (95)</span>
+          <div class="seq-btns">
+            <button class="seq-btn" id="gearDown">&minus; SHIFT</button>
+            <button class="seq-btn" id="gearUp">SHIFT +</button>
+          </div>
+        </div>
+        <div class="gear-rail" id="gearRail">
+          <button class="gslot r" data-gear="R" data-pwm="135">R</button>
+          <button class="gslot n" data-gear="N" data-pwm="0">N</button>
+          <button class="gslot active" data-gear="1" data-pwm="95">1</button>
+          <button class="gslot" data-gear="2" data-pwm="135">2</button>
+          <button class="gslot" data-gear="3" data-pwm="175">3</button>
+          <button class="gslot" data-gear="4" data-pwm="215">4</button>
+          <button class="gslot" data-gear="5" data-pwm="255">5</button>
+        </div>
+      </div>
+
+      <div class="pedal-well">
+        <div class="pedal pedal-brake" id="pedalBrake">
+          <span class="pedal-title">BRAKE</span>
+          <span class="pedal-sub">HOLD STOP</span>
+        </div>
+        <div class="pedal pedal-gas" id="pedalGas">
+          <span class="pedal-title">GAS</span>
+          <span class="pedal-sub" id="gasSub">1st GEAR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: TUNING SLIDERS & LIVE SERIAL LOG -->
+    <div class="rpanel" id="panelTune">
+      <div class="sliders">
+        <div class="sbox">
+          <label><span>Speed PWM</span><b id="vSpeed">180</b></label>
+          <input type="range" id="speed" min="60" max="255" value="180">
+        </div>
+        <div class="sbox">
+          <label><span>Stop Dist</span><b><span id="vDist">25</span> cm</b></label>
+          <input type="range" id="dist" min="5" max="60" value="25">
+        </div>
+        <div class="sbox">
+          <label><span>Servo Aim</span><b id="vAim">center</b></label>
+          <input type="range" id="aim" min="0" max="180" value="90">
+        </div>
+      </div>
+      <pre id="log">Cockpit ready. Connect BLE or USB.
+</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const enc = new TextEncoder(), dec = new TextDecoder();
+let mode = "ble";
+let connected = false;
+const usb = { port: null, writer: null, reader: null, loop: null };
+const ble = { device: null, tx: null };
+
+const DIR_NAMES = {
+  U: "Forward", D: "Backward", L: "Rotate Left", R: "Rotate Right",
+  F: "Upper Left", G: "Upper Right", B: "Lower Left", N: "Lower Right", O: "Stop"
+};
+
+// ---------- Car Mode State ----------
+let carMode = false;
+const CAR_GEARS = [
+  { id: "R", label: "REV",  pwm: 135 },
+  { id: "N", label: "NEUT", pwm: 0   },
+  { id: "1", label: "1st",  pwm: 95  },
+  { id: "2", label: "2nd",  pwm: 135 },
+  { id: "3", label: "3rd",  pwm: 175 },
+  { id: "4", label: "4th",  pwm: 215 },
+  { id: "5", label: "5th",  pwm: 255 }
+];
+let carGearIdx = 2; // defaults to 1st gear when entering Car Mode
+let steerAngle = 0; // -135..+135 degrees in Car Mode
+let gasHeld = false;
+let brakeHeld = false;
+
+// ---------- Tabs & Car Mode Toggle ----------
+function setCarMode(on){
+  carMode = on;
+  resetJoystick();
+  gasHeld = false;
+  brakeHeld = false;
+  $("pedalGas").classList.remove("down");
+  $("pedalBrake").classList.remove("down");
+  $("carModeBtn").classList.toggle("car-on", on);
+  $("carModeBtn").textContent = on ? "Car Mode: ON" : "Car Mode";
+  $("joyWrap").classList.toggle("car-mode", on);
+  $("wheelFoot").textContent = on ? "STEERING WHEEL (-135\u00b0..+135\u00b0)" : "360\u00b0 COBRA S.";
+  if (on && padMode) {
+    padMode = false;
+    $("joyWrap").style.display = "flex";
+    $("dpad8").style.display = "none";
+    $("togglePad").textContent = "D-Pad";
+  }
+  if (on) {
+    selectCarGear(carGearIdx, true);
+    $("dirLabel").textContent = "STEER: 0\u00b0";
+  } else {
+    $("txtGearBadge").textContent = "G2";
+    $("dirLabel").textContent = "DIR: STOP";
+  }
+}
+
+function showTab(which){
+  $("tabDrive").classList.toggle("active", which === "drive");
+  $("tabCar").classList.toggle("active", which === "car");
+  $("tabTune").classList.toggle("active", which === "tune");
+  $("panelDrive").classList.toggle("active", which === "drive");
+  $("panelCar").classList.toggle("active", which === "car");
+  $("panelTune").classList.toggle("active", which === "tune");
+  if (which === "car" && !carMode) setCarMode(true);
+  else if (which === "drive" && carMode) setCarMode(false);
+}
+$("tabDrive").onclick = () => showTab("drive");
+$("tabCar").onclick = () => showTab("car");
+$("tabTune").onclick = () => showTab("tune");
+$("carModeBtn").onclick = () => showTab(carMode ? "drive" : "car");
+
+// ---------- Analog Meter Helpers ----------
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function setSpeedGauge(pwm){
+  const v = clamp(+pwm || 0, 0, 255);
+  const deg = -125 + (v / 255) * 250;
+  $("needleSpeed").style.transform = `rotate(${deg.toFixed(1)}deg)`;
+  $("txtSpeed").textContent = Math.round(v);
+}
+
+function computeFuel(mv, dividerMode){
+  const minMv = dividerMode ? 6000 : 4100;
+  const maxMv = dividerMode ? 8400 : 5000;
+  const pct = clamp(Math.round(((mv - minMv) / (maxMv - minMv)) * 100), 0, 100);
+  return { pct, volts: (mv / 1000).toFixed(2), low: pct <= 25 };
+}
+
+function setFuelGauge(mv, dividerMode){
+  if (!mv || mv < 1000) return;
+  const { pct, volts, low } = computeFuel(mv, dividerMode);
+  const deg = -125 + (pct / 100) * 250;
+  $("needleFuel").style.transform = `rotate(${deg.toFixed(1)}deg)`;
+  $("txtFuel").textContent = volts + "V";
+  $("txtFuel").setAttribute("fill", low ? "#f87171" : "#86efac");
+  $("lowFuelLed").classList.toggle("low", low);
+}
+
+function setSonarGauge(cm){
+  const clear = (!cm || cm >= 999);
+  const clamped = clear ? 80 : clamp(cm, 0, 80);
+  const deg = -125 + (clamped / 80) * 250;
+  $("needleSonar").style.transform = `rotate(${deg.toFixed(1)}deg)`;
+  $("txtSonar").textContent = clear ? "CLR" : (Math.round(cm) + "cm");
+  $("txtSonar").setAttribute("fill", (!clear && cm <= +$("dist").value) ? "#f87171" : "#7dd3fc");
+}
+
+// ---------- Serial Rx Buffer & Telemetry Parser ----------
+let rxBuf = "";
+function parseTelemetryLine(line){
+  const s = line.trim();
+  if (!s) return false;
+  if (s.startsWith("TEL:")) {
+    const p = s.slice(4).split(",").map(Number);
+    if (p.length >= 2 && !Number.isNaN(p[0])) {
+      setFuelGauge(p[0], p[4] ? 1 : 0);
+      setSonarGauge(p[1]);
+      if (p.length >= 4 && !heldDir && !gasHeld) setSpeedGauge(p[3] ? p[2] : 0);
+      return true;
+    }
+  }
+  const dm = s.match(/^Distance\s+(\d+)\s*cm/i);
+  if (dm) setSonarGauge(+dm[1]);
+  else if (/^Distance\s+clear/i.test(s)) setSonarGauge(999);
+  return false;
+}
+
+function onSerialData(chunk){
+  rxBuf += chunk;
+  let nl;
+  while ((nl = rxBuf.indexOf("\n")) >= 0) {
+    const line = rxBuf.slice(0, nl);
+    rxBuf = rxBuf.slice(nl + 1);
+    const isTel = parseTelemetryLine(line);
+    if (!isTel && line.trim()) log(line + "\n");
+  }
+}
+
+function log(t){
+  const l = $("log");
+  l.textContent += t;
+  if (l.textContent.length > 2400) l.textContent = l.textContent.slice(-1800);
+  l.scrollTop = l.scrollHeight;
+  const clean = t.trim().split("\n").pop();
+  if (clean) $("ticker").textContent = clean;
+}
+
+function setState(on, text){
+  connected = on;
+  $("led").classList.toggle("on", on);
+  $("conn").textContent = on ? "Disconnect" : "Connect";
+  $("conn").className = "pill " + (on ? "disc" : "conn");
+  $("st").textContent = on ? text : "DEMO";
+  $("st").classList.toggle("live", on);
+  $("mUsb").disabled = $("mBle").disabled = on;
+  if (!on) { setSpeedGauge(0); }
+}
+
+// ---------- Framed Serial Protocol ('!' prefix) ----------
+let chain = Promise.resolve();
+async function sendRaw(code){
+  const data = enc.encode("!" + code);
+  if (mode === "usb") {
+    await usb.writer.write(data);
+  } else {
+    if (ble.tx.properties.writeWithoutResponse) await ble.tx.writeValueWithoutResponse(data);
+    else await ble.tx.writeValue(data);
+    await new Promise(r => setTimeout(r, 40));
+  }
+}
+function send(code, name, quiet){
+  if (!name) return;
+  if (!connected){ if (!quiet) log("[demo] " + name + "\n"); return; }
+  chain = chain.then(() => sendRaw(code))
+               .then(() => { if (!quiet) log("> " + name + "\n"); })
+               .catch(e => log("Send error: " + e.message + "\n"));
+}
+
+// ---------- Periodic Telemetry Poll (!Q every 2.5s while idle) ----------
+setInterval(() => {
+  if (connected && !heldDir && !gasHeld) send("Q", "Telemetry", true);
+}, 2500);
+
+// ---------- USB (Web Serial) ----------
+async function usbReadLoop(){
+  while (usb.port && usb.port.readable && connected){
+    usb.reader = usb.port.readable.getReader();
+    try {
+      for (;;){ const {value, done} = await usb.reader.read(); if (done) break; onSerialData(dec.decode(value)); }
+    } catch(e){ log("USB read: " + e.message + "\n"); }
+    finally { usb.reader.releaseLock(); }
+  }
+}
+async function connectUsb(){
+  if (!("serial" in navigator)){ log("Web Serial not supported on this browser.\n"); return; }
+  try {
+    usb.port = await navigator.serial.requestPort();
+    await usb.port.open({ baudRate: 9600 });
+    usb.writer = usb.port.writable.getWriter();
+    setState(true, "USB 9600");
+    log("USB connected. Waiting 2s for reset...\n");
+    usb.loop = usbReadLoop();
+    setTimeout(pushSettings, 2500);
+  } catch(e){ log("USB failed: " + e.message + "\n"); }
+}
+async function disconnectUsb(){
+  setState(false);
+  try {
+    if (usb.reader) await usb.reader.cancel();
+    await usb.loop;
+    if (usb.writer){ usb.writer.releaseLock(); usb.writer = null; }
+    await usb.port.close();
+  } catch(_){}
+  usb.port = null;
+  log("Disconnected.\n");
+}
+
+// ---------- Bluetooth (Web Bluetooth BLE: JDY-16) ----------
+async function connectBle(){
+  if (!navigator.bluetooth){ log("Web Bluetooth not supported. Use Chrome on Android/PC.\n"); return; }
+  try {
+    ble.device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [0xFFE0, 0xFFF0]
+    });
+    ble.device.addEventListener("gattserverdisconnected", () => {
+      if (connected){ setState(false); log("Bluetooth lost.\n"); }
+    });
+    const name = ble.device.name || "CD PRINTS CAR";
+    log("Connecting to " + name + "...\n");
+    const server = await ble.device.gatt.connect();
+    let tx = null, rx = null;
+    for (const svc of await server.getPrimaryServices()){
+      for (const c of await svc.getCharacteristics()){
+        const p = c.properties;
+        if (!tx && (p.writeWithoutResponse || p.write)) tx = c;
+        if (!rx && p.notify) rx = c;
+      }
+    }
+    if (!tx) throw new Error("No serial characteristic found");
+    ble.tx = tx;
+    if (rx){
+      await rx.startNotifications();
+      rx.addEventListener("characteristicvaluechanged", e => onSerialData(dec.decode(e.target.value)));
+    }
+    setState(true, "BLE");
+    log("Connected: " + name + "\n");
+    setTimeout(pushSettings, 300);
+  } catch(e){
+    log("BLE failed: " + e.message + "\n");
+    try { if (ble.device && ble.device.gatt.connected) ble.device.gatt.disconnect(); } catch(_){}
+  }
+}
+function disconnectBle(){
+  setState(false);
+  try { ble.device.gatt.disconnect(); } catch(_){}
+  log("Disconnected.\n");
+}
+
+function setMode(m){
+  if (connected) return;
+  mode = m;
+  $("mBle").classList.toggle("on", m === "ble");
+  $("mUsb").classList.toggle("on", m === "usb");
+  $("mUsb").classList.toggle("usb-lit", m !== "usb");
+}
+$("mBle").onclick = () => setMode("ble");
+$("mUsb").onclick = () => setMode("usb");
+$("conn").onclick = () => {
+  if (connected) return mode === "usb" ? disconnectUsb() : disconnectBle();
+  return mode === "usb" ? connectUsb() : connectBle();
+};
+$("fsBtn").onclick = async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      if (screen.orientation && screen.orientation.lock) {
+        await screen.orientation.lock("landscape").catch(() => {});
+      }
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch(_){}
+};
+
+// ---------- Settings & Tuning ----------
+function setting(cmd, val, name, quiet){ send(cmd + val + "\n", name, quiet); }
+function pushSettings(){
+  send("O", "Stop (ready)");
+  setting("V", $("speed").value, "Speed " + $("speed").value);
+  setting("T", $("dist").value, "Stop dist " + $("dist").value + " cm");
+  setting("H", 2, "Sensitivity High");
+  setting("E", $("sensorOn").checked ? 1 : 0, "Sensor " + ($("sensorOn").checked ? "on" : "off"));
+  setting("W", $("sweepOn").checked ? 1 : 0, "Sweep " + ($("sweepOn").checked ? "on" : "off"));
+  setting("J", $("trackInv").checked ? 1 : 0, "Track Invert");
+  sendAim(true);
+  send("Q", "Battery scan", true);
+}
+$("speed").oninput = e => {
+  $("vSpeed").textContent = e.target.value;
+  if (heldDir || gasHeld) setSpeedGauge(e.target.value);
+};
+$("speed").onchange = e => setting("V", e.target.value, "Speed " + e.target.value);
+$("dist").oninput = e => $("vDist").textContent = e.target.value;
+$("dist").onchange = e => setting("T", e.target.value, "Stop dist " + e.target.value + " cm");
+$("sensorOn").onchange = e => setting("E", e.target.checked ? 1 : 0, "Sensor " + (e.target.checked ? "on" : "off"));
+$("sweepOn").onchange = e => setting("W", e.target.checked ? 1 : 0, "Sweep " + (e.target.checked ? "on" : "off"));
+$("trackInv").onchange = e => setting("J", e.target.checked ? 1 : 0, "Track Invert");
+
+let lastAim = 0;
+function aimLabel(v){ return v === 90 ? "center" : (v < 90 ? "left " + (90 - v) + "\u00b0" : "right " + (v - 90) + "\u00b0"); }
+function sendAim(quiet){
+  const v = +$("aim").value;
+  const angle = $("flip").checked ? v : 180 - v;
+  send("A" + angle + "\n", "Aim " + aimLabel(v), quiet);
+}
+$("aim").oninput = e => {
+  $("vAim").textContent = aimLabel(+e.target.value);
+  const now = Date.now();
+  if (now - lastAim > 120){ lastAim = now; sendAim(true); }
+};
+$("aim").onchange = () => sendAim(false);
+$("flip").onchange = () => sendAim(false);
+
+// ---------- 8-Way Steering (Default Mode) + Car Mode Drive Matrix ----------
+const WHEEL_TILT = { L: -28, F: -18, B: -18, R: 28, G: 18, N: 18, U: 0, D: 0 };
+let heldDir = null;
+
+function setDir(c){
+  if (heldDir === c) return;
+  heldDir = c;
+  document.querySelectorAll(".sector-lbl").forEach(el => {
+    el.classList.toggle("active", el.dataset.s === c);
+  });
+  document.querySelectorAll("#dpad8 button.k").forEach(b => {
+    b.classList.toggle("down", b.dataset.c === c);
+  });
+  if (!carMode) {
+    $("wheelSvg").style.transform = `rotate(${c ? (WHEEL_TILT[c] || 0) : 0}deg)`;
+  }
+  if (c) {
+    if (!carMode) $("dirLabel").textContent = "DIR: " + DIR_NAMES[c].toUpperCase();
+    setSpeedGauge($("speed").value);
+    send(c, DIR_NAMES[c]);
+  } else {
+    if (!carMode) $("dirLabel").textContent = "DIR: STOP";
+    setSpeedGauge(0);
+    send("O", "Stop");
+  }
+}
+
+// Compute direction command in Car Mode from (gasHeld, brakeHeld, gear, steerAngle)
+function computeCarCommand(gas, brake, gearId, angle){
+  if (brake || !gas || gearId === "N") return null;
+  if (gearId === "R") {
+    if (angle < -24) return "B"; // Reverse-Left
+    if (angle > 24)  return "N"; // Reverse-Right
+    return "D";                  // Reverse Straight
+  }
+  // Forward gears 1..5
+  if (angle < -85) return "L";   // Sharp Left pivot
+  if (angle < -22) return "F";   // Forward-Left curve
+  if (angle > 85)  return "R";   // Sharp Right pivot
+  if (angle > 22)  return "G";   // Forward-Right curve
+  return "U";                    // Forward Straight
+}
+
+function syncCarDrive(){
+  if (!carMode) return;
+  const g = CAR_GEARS[carGearIdx];
+  if (brakeHeld) {
+    setDir(null);
+    $("dirLabel").textContent = "BRAKE HOLD";
+    return;
+  }
+  if (gasHeld && g.id === "N") {
+    setDir(null);
+    setSpeedGauge(110); // free neutral engine rev visual
+    $("dirLabel").textContent = "NEUTRAL REV";
+    return;
+  }
+  const cmd = computeCarCommand(gasHeld, brakeHeld, g.id, steerAngle);
+  setDir(cmd);
+  const steerTxt = Math.abs(steerAngle) < 8 ? "0\u00b0" : ((steerAngle > 0 ? "+" : "") + Math.round(steerAngle) + "\u00b0");
+  $("dirLabel").textContent = (cmd ? (g.label + " " + DIR_NAMES[cmd].toUpperCase()) : ("STEER: " + steerTxt));
+}
+
+function selectCarGear(idx, quiet){
+  carGearIdx = clamp(idx, 0, CAR_GEARS.length - 1);
+  const g = CAR_GEARS[carGearIdx];
+  document.querySelectorAll("#gearRail .gslot").forEach((b, i) => {
+    b.classList.toggle("active", i === carGearIdx);
+  });
+  $("gearReadout").textContent = `GEAR: ${g.label} (${g.pwm})`;
+  $("txtGearBadge").textContent = g.id === "R" ? "R" : (g.id === "N" ? "N" : ("G" + g.id));
+  $("gasSub").textContent = g.id === "N" ? "NEUTRAL" : (g.id === "R" ? "REVERSE" : (g.label + " GEAR"));
+  if (g.pwm > 0) {
+    $("speed").value = g.pwm;
+    $("vSpeed").textContent = g.pwm;
+    setting("V", g.pwm, "Gear " + g.label + " (" + g.pwm + ")", quiet);
+  }
+  if (carMode) syncCarDrive();
+}
+
+document.querySelectorAll("#gearRail .gslot").forEach((b, idx) => {
+  b.onclick = () => selectCarGear(idx, false);
+});
+$("gearDown").onclick = () => selectCarGear(carGearIdx - 1, false);
+$("gearUp").onclick   = () => selectCarGear(carGearIdx + 1, false);
+
+// ---------- Gas & Brake Pedals (Multi-Touch Safe) ----------
+const pedalGas = $("pedalGas"), pedalBrake = $("pedalBrake");
+
+pedalGas.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  pedalGas.setPointerCapture(e.pointerId);
+  gasHeld = true;
+  pedalGas.classList.add("down");
+  syncCarDrive();
+});
+function releaseGas(){
+  if (!gasHeld) return;
+  gasHeld = false;
+  pedalGas.classList.remove("down");
+  syncCarDrive();
+}
+pedalGas.addEventListener("pointerup", releaseGas);
+pedalGas.addEventListener("pointercancel", releaseGas);
+
+pedalBrake.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  pedalBrake.setPointerCapture(e.pointerId);
+  brakeHeld = true;
+  pedalBrake.classList.add("down");
+  send("O", "BRAKE");
+  syncCarDrive();
+});
+function releaseBrake(){
+  if (!brakeHeld) return;
+  brakeHeld = false;
+  pedalBrake.classList.remove("down");
+  syncCarDrive();
+}
+pedalBrake.addEventListener("pointerup", releaseBrake);
+pedalBrake.addEventListener("pointercancel", releaseBrake);
+
+// ---------- Steering Wheel / Virtual Joystick Handler ----------
+const joyWrap = $("joyWrap"), joyStick = $("joyStick");
+let joyPtr = null;
+
+function setWheelRotation(deg){
+  steerAngle = clamp(deg, -135, 135);
+  $("wheelSvg").style.transform = `rotate(${steerAngle.toFixed(1)}deg)`;
+  joyStick.style.transform = `translate(0px, 0px) rotate(${steerAngle.toFixed(1)}deg)`;
+  syncCarDrive();
+}
+
+function updateJoystick(clientX, clientY){
+  const rect = joyWrap.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const maxR = (rect.width / 2) - 32;
+  let dx = clientX - cx;
+  let dy = clientY - cy;
+
+  if (carMode) {
+    // True rotating steering wheel: horizontal deflection + upper-rim arc turns wheel -135..+135 deg
+    const normX = clamp(dx / (maxR * 0.95), -1, 1);
+    setWheelRotation(normX * 135);
+    return;
+  }
+
+  const dist = Math.hypot(dx, dy);
+  if (dist > maxR) {
+    dx = (dx / dist) * maxR;
+    dy = (dy / dist) * maxR;
+  }
+  joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  if (dist < maxR * 0.24) {
+    setDir(null);
+    return;
+  }
+  const deg = Math.atan2(dy, dx) * 180 / Math.PI;
+  let dir = "U";
+  if (deg >= -22.5 && deg < 22.5)         dir = "R";
+  else if (deg >= 22.5 && deg < 67.5)     dir = "N";
+  else if (deg >= 67.5 && deg < 112.5)    dir = "D";
+  else if (deg >= 112.5 && deg < 157.5)   dir = "B";
+  else if (deg >= -67.5 && deg < -22.5)   dir = "G";
+  else if (deg >= -112.5 && deg < -67.5)  dir = "U";
+  else if (deg >= -157.5 && deg < -112.5) dir = "F";
+  else                                    dir = "L";
+  setDir(dir);
+}
+
+function resetJoystick(){
+  joyPtr = null;
+  joyWrap.classList.remove("turning");
+  joyStick.classList.add("idle");
+  joyStick.style.transform = "translate(0px, 0px) rotate(0deg)";
+  if (carMode) {
+    setWheelRotation(0);
+  } else {
+    setDir(null);
+  }
+}
+
+joyWrap.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  joyPtr = e.pointerId;
+  joyWrap.setPointerCapture(e.pointerId);
+  joyWrap.classList.add("turning");
+  joyStick.classList.remove("idle");
+  updateJoystick(e.clientX, e.clientY);
+});
+joyWrap.addEventListener("pointermove", e => {
+  if (e.pointerId !== joyPtr) return;
+  updateJoystick(e.clientX, e.clientY);
+});
+joyWrap.addEventListener("pointerup", e => {
+  if (e.pointerId === joyPtr) resetJoystick();
+});
+joyWrap.addEventListener("pointercancel", e => {
+  if (e.pointerId === joyPtr) resetJoystick();
+});
+
+// ---------- Optional 8-Way D-Pad Toggle ----------
+let padMode = false;
+$("togglePad").onclick = () => {
+  if (carMode) setCarMode(false);
+  padMode = !padMode;
+  resetJoystick();
+  $("joyWrap").style.display = padMode ? "none" : "flex";
+  $("dpad8").style.display = padMode ? "grid" : "none";
+  $("togglePad").textContent = padMode ? "Wheel" : "D-Pad";
+};
+
+document.querySelectorAll("#dpad8 button.k").forEach(b => {
+  const c = b.dataset.c;
+  if (c === "O") {
+    b.addEventListener("pointerdown", e => { e.preventDefault(); setDir(null); });
+  } else {
+    b.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      b.setPointerCapture(e.pointerId);
+      setDir(c);
+    });
+    b.addEventListener("pointerup", () => { if (heldDir === c) setDir(null); });
+    b.addEventListener("pointercancel", () => { if (heldDir === c) setDir(null); });
+  }
+});
+
+// ---------- Default Speed Gears + Right-Hand Dash Buttons ----------
+document.querySelectorAll(".gears button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".gears button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    $("speed").value = b.dataset.v;
+    $("vSpeed").textContent = b.dataset.v;
+    $("txtGearBadge").textContent = "G" + b.dataset.g;
+    if (heldDir) setSpeedGauge(b.dataset.v);
+    send(b.dataset.g, "Gear " + b.textContent);
+  };
+});
+
+$("btnStop").addEventListener("pointerdown", e => { e.preventDefault(); resetJoystick(); releaseGas(); send("O", "STOP"); });
+$("btnAuto").onclick = () => send("4", "Auto Avoid Toggle");
+$("btnTrack").onclick = () => send("5", "Line Tracking Toggle");
+$("btnFollow").onclick = () => send("6", "Follow Mode Toggle");
+$("btnLight").onclick = () => send("7", "Light Seek Toggle");
+$("btnTrackTest").onclick = () => send("K", "Test Line Sensors");
+$("btnSensorTest").onclick = () => send("Z", "Test Light & Follow");
+$("btnPing").onclick = () => send("P", "Read Distance");
+$("btnBatt").onclick = () => {
+  if (!connected) { setFuelGauge(4850, 0); log("[demo] Battery scan: 4.85V (83%)\n"); return; }
+  send("Q", "Battery & Sonar Scan");
+};
+$("btnTest").onclick = () => send("S", "Motor & Rate Test");
+
+// Initial gauge positions
+setSpeedGauge(0);
+setSonarGauge(999);
+
+addEventListener("blur", () => { resetJoystick(); releaseGas(); releaseBrake(); });
+</script>
+</body>
+</html>
