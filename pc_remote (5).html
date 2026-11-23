@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAFVIN Car PC Remote</title>
+<style>
+:root{--bg:#f1f1ef;--fg:#1c1c1c;--body:#2b2d33;--key:#454851;--keyfg:#fff;--accent:#e8483b;--panel:#fff;--mut:#777;--seg:#e4e4e1}
+@media (prefers-color-scheme:dark){:root{--bg:#16171a;--fg:#e8e8e8;--panel:#202226;--mut:#999;--seg:#2d2f34}}
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,sans-serif;display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.remote{background:var(--body);border-radius:28px;padding:22px;width:260px;box-shadow:0 8px 24px #0004}
+.led{width:10px;height:10px;border-radius:50%;background:#555;margin:0 auto 14px}
+.led.on{background:#3ddc84}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+button.k{background:var(--key);color:var(--keyfg);border:0;border-radius:12px;height:48px;font-size:17px;cursor:pointer;transition:transform .05s}
+button.k:hover{filter:brightness(1.2)}
+button.k.down,button.k:active{transform:scale(.93);background:var(--accent)}
+button.k.off{opacity:.35;cursor:default}
+.dpad{margin:16px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dpad .k{height:56px;font-size:22px}
+.dpad .ok{background:var(--accent);font-size:16px;font-weight:600}
+.panel{background:var(--panel);border-radius:16px;padding:18px;width:340px;max-width:100%}
+h1{font-size:18px;margin:0 0 4px}
+p.s{font-size:13px;color:var(--mut);margin:0 0 12px}
+.seg{display:flex;background:var(--seg);border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;color:var(--fg);padding:8px;border-radius:8px;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:#fff}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+#conn{padding:9px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-size:14px;cursor:pointer}
+#st{font-size:13px;color:var(--mut)}
+#log{background:#0d0d0f;color:#9be39b;font:12px/1.4 Consolas,monospace;height:220px;overflow:auto;border-radius:8px;padding:10px;white-space:pre-wrap;margin:0}
+.map{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.6}
+.set{border-top:1px solid var(--seg);padding-top:10px;margin-bottom:12px;font-size:13px}
+.set label{display:block;margin-bottom:8px}
+.set input[type=range]{width:100%;display:block}
+.set select{margin-left:6px;padding:4px;border-radius:6px}
+.aimbtns{display:flex;gap:6px;margin-bottom:8px}
+.aimbtns button{flex:1}
+.set button{padding:7px 12px;border-radius:8px;border:0;background:var(--key);color:#fff;cursor:pointer}
+details{margin-top:10px;font-size:12px;color:var(--mut);line-height:1.6}
+summary{cursor:pointer;color:var(--fg)}
+</style>
+</head>
+<body>
+
+<div class="remote">
+  <div class="led" id="led"></div>
+  <div class="grid" id="nums"></div>
+  <div class="dpad">
+    <button class="k" data-c="F" data-n="Upper Left">↖</button>
+    <button class="k" data-c="U" data-n="Forward">▲</button>
+    <button class="k" data-c="G" data-n="Upper Right">↗</button>
+    <button class="k" data-c="L" data-n="Left">◀</button>
+    <button class="k ok" data-c="O" data-n="Stop (OK)">OK</button>
+    <button class="k" data-c="R" data-n="Right">▶</button>
+    <button class="k" data-c="B" data-n="Lower Left">↙</button>
+    <button class="k" data-c="D" data-n="Backward">▼</button>
+    <button class="k" data-c="N" data-n="Lower Right">↘</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h1>LAFVIN Car PC Remote</h1>
+  <p class="s">Pick how to connect, then click Connect. Without a connection it runs in demo mode and just logs presses.</p>
+
+  <div class="seg">
+    <button id="mUsb" class="on">USB cable</button>
+    <button id="mBle">Bluetooth</button>
+  </div>
+
+  <div class="row">
+    <button id="conn">Connect</button>
+    <span id="st">Demo mode (not connected)</span>
+  </div>
+  <div class="set">
+    <label>Speed <b id="vSpeed">180</b> (60 to 255)
+      <input type="range" id="speed" min="60" max="255" value="180"></label>
+    <label>Stop distance <b id="vDist">25</b> cm
+      <input type="range" id="dist" min="5" max="60" value="25"></label>
+    <label>Sensor sensitivity
+      <select id="sens"><option value="5">Low</option><option value="3">Medium</option><option value="2" selected>High</option></select></label>
+    <label><input type="checkbox" id="sensorOn" checked> Obstacle sensor (auto mode always uses it)</label>
+    <label><input type="checkbox" id="sweepOn" checked> Sweep sensor left and right</label>
+    <label>Sensor direction: <b id="vAim">center</b>
+      <input type="range" id="aim" min="0" max="180" value="90"></label>
+    <div class="aimbtns"><button id="aimL">&#9664; Left</button><button id="aimC">Center</button><button id="aimR">Right &#9654;</button></div>
+    <label><input type="checkbox" id="flip"> Flip sensor left / right</label>
+    <div class="aimbtns"><button id="ping">Read distance</button><button id="autoBtn">Auto avoid</button><button id="trackBtn">Line track</button><button id="followBtn">Follow mode</button><button id="lightBtn">Light seek</button><button id="testBtn">Motor test</button></div>
+    <div class="aimbtns"><button id="trackTestBtn">Test line</button><button id="sensorTestBtn">Test Light/IR</button><label style="display:flex;align-items:center;gap:4px;font-size:12px;margin:0"><input type="checkbox" id="trackInv"> Invert line (LOW)</label></div>
+  </div>
+  <pre id="log">Ready.
+</pre>
+
+  <div class="map">
+    Keyboard: Hold Arrow keys or WASD (combine 2 keys for diagonals, release = stop), Space = stop, 1 / 2 / 3 = speed, 4 = auto mode<br>
+    <a href="phone_controller.html" style="color:var(--accent)">Open Phone Landscape Game Controller &rarr;</a>
+  </div>
+  <details>
+    <summary>Bluetooth quick steps</summary>
+    1. Plug the JDY-16 module in (after uploading) and switch the car on.<br>
+    2. Do not pair it in Windows settings, just have Bluetooth turned on.<br>
+    3. Close the phone app, only one device can connect at a time.<br>
+    4. Choose Bluetooth, click Connect, pick "CD PRINTS CAR" (or JDY-16 before reboot), click Pair.<br>
+    5. Press a button. The log should show a reply like "-&gt; FORWARD".
+  </details>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const NUMS = [["1","Speed slow"],["2","Speed medium"],["3","Speed fast"],["4","Auto mode toggle"],["5","Line Tracking toggle"],["6","Follow mode toggle"],["7","Light seek toggle"],["8",""],["9",""],["*",""],["0","Stop"],["#",""]];
+NUMS.forEach(([c,n]) => {
+  const b = document.createElement("button");
+  b.className = "k" + (n ? "" : " off");
+  b.textContent = c; b.dataset.c = c; b.dataset.n = n;
+  $("nums").appendChild(b);
+});
+
+const enc = new TextEncoder(), dec = new TextDecoder();
+let mode = "usb";            // "usb" or "ble"
+let connected = false;
+const usb = { port: null, writer: null, reader: null, loop: null };
+const ble = { device: null, tx: null };
+
+function log(t){ const l = $("log"); l.textContent += t; l.scrollTop = l.scrollHeight; }
+function setState(on, text){
+  connected = on;
+  $("led").classList.toggle("on", on);
+  $("conn").textContent = on ? "Disconnect" : "Connect";
+  $("st").textContent = on ? text : "Demo mode (not connected)";
+  $("mUsb").disabled = $("mBle").disabled = on;   // switch modes only while disconnected
+}
+
+// ---------- sending ----------
+let chain = Promise.resolve();
+async function sendRaw(code){
+  const data = enc.encode("!" + code);         // '!' prefix prevents BLE status text from moving the car
+  if (mode === "usb") {
+    await usb.writer.write(data);
+  } else {
+    if (ble.tx.properties.writeWithoutResponse) await ble.tx.writeValueWithoutResponse(data);
+    else await ble.tx.writeValue(data);
+    await new Promise(r => setTimeout(r, 40)); // pace BLE writes so JDY-16 doesn't drop bytes
+  }
+}
+function send(code, name, quiet){
+  if (!name) return;                       // unassigned key
+  if (!connected){ if (!quiet) log("[demo] " + name + "\n"); return; }
+  chain = chain.then(() => sendRaw(code))
+               .then(() => { if (!quiet) log("> " + name + "\n"); })
+               .catch(e => log("Send failed: " + e.message + "\n"));
+}
+
+// ---------- USB (Web Serial) ----------
+async function usbReadLoop(){
+  while (usb.port && usb.port.readable && connected){
+    usb.reader = usb.port.readable.getReader();
+    try {
+      for (;;){ const {value, done} = await usb.reader.read(); if (done) break; log(dec.decode(value)); }
+    } catch(e) { log("Read error: " + e.message + "\n"); }
+    finally { usb.reader.releaseLock(); }
+  }
+}
+async function connectUsb(){
+  if (!("serial" in navigator)){ log("Web Serial not supported. Use Chrome or Edge.\n"); return; }
+  try {
+    usb.port = await navigator.serial.requestPort();
+    await usb.port.open({ baudRate: 9600 });
+    usb.writer = usb.port.writable.getWriter();
+    setState(true, "Connected (USB, 9600 baud)");
+    log("USB connected. Wait about 2 seconds for the Arduino to reset.\n");
+    usb.loop = usbReadLoop();
+    setTimeout(pushSettings, 2500);            // after the Arduino finishes resetting
+  } catch(e){ log("USB connect failed: " + e.message + "\n"); }
+}
+async function disconnectUsb(){
+  setState(false);
+  try {
+    if (usb.reader) await usb.reader.cancel();
+    await usb.loop;
+    if (usb.writer){ usb.writer.releaseLock(); usb.writer = null; }
+    await usb.port.close();
+  } catch(e){ log("Disconnect: " + e.message + "\n"); }
+  usb.port = null;
+  log("Disconnected.\n");
+}
+
+// ---------- Bluetooth (Web Bluetooth, BLE modules like the JDY-16) ----------
+async function connectBle(){
+  if (!navigator.bluetooth){ log("Web Bluetooth not supported. Use Chrome or Edge.\n"); return; }
+  try {
+    ble.device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [0xFFE0, 0xFFF0]       // common BLE serial services (JDY-16 uses FFE0)
+    });
+    ble.device.addEventListener("gattserverdisconnected", () => {
+      if (connected){ setState(false); log("Bluetooth connection lost.\n"); }
+    });
+    const name = ble.device.name || "device";
+    log("Connecting to " + name + "...\n");
+    const server = await ble.device.gatt.connect();
+
+    let tx = null, rx = null;                   // find the serial write and notify characteristics
+    for (const svc of await server.getPrimaryServices()){
+      for (const c of await svc.getCharacteristics()){
+        const p = c.properties;
+        if (!tx && (p.writeWithoutResponse || p.write)) tx = c;
+        if (!rx && p.notify) rx = c;
+      }
+    }
+    if (!tx) throw new Error("no Bluetooth serial characteristic found, is this the car's module?");
+    ble.tx = tx;
+    if (rx){
+      await rx.startNotifications();
+      rx.addEventListener("characteristicvaluechanged", e => log(dec.decode(e.target.value)));
+    }
+    setState(true, "Connected (Bluetooth: " + name + ")");
+    log("Bluetooth connected.\n");
+    setTimeout(pushSettings, 300);
+  } catch(e){
+    log("Bluetooth connect failed: " + e.message + "\n");
+    try { if (ble.device && ble.device.gatt.connected) ble.device.gatt.disconnect(); } catch(_){}
+  }
+}
+function disconnectBle(){
+  setState(false);
+  try { ble.device.gatt.disconnect(); } catch(_){}
+  log("Disconnected.\n");
+}
+
+// ---------- UI ----------
+function setMode(m){
+  if (connected) return;
+  mode = m;
+  $("mUsb").classList.toggle("on", m === "usb");
+  $("mBle").classList.toggle("on", m === "ble");
+  log("Mode: " + (m === "usb" ? "USB cable" : "Bluetooth") + "\n");
+}
+$("mUsb").onclick = () => setMode("usb");
+$("mBle").onclick = () => setMode("ble");
+$("conn").onclick = () => {
+  if (connected) return mode === "usb" ? disconnectUsb() : disconnectBle();
+  return mode === "usb" ? connectUsb() : connectBle();
+};
+
+// ---------- speed and sensor settings ----------
+function setting(cmd, val, name){ send(cmd + val + "\n", name); }
+function pushSettings(){                       // make the car match the page after connecting
+  send("O", "Stop (ready)");
+  setting("V", $("speed").value, "Speed " + $("speed").value);
+  setting("T", $("dist").value, "Stop distance " + $("dist").value + " cm");
+  setting("H", $("sens").value, "Sensitivity");
+  setting("E", $("sensorOn").checked ? 1 : 0, "Sensor " + ($("sensorOn").checked ? "on" : "off"));
+  setting("W", $("sweepOn").checked ? 1 : 0, "Sweep " + ($("sweepOn").checked ? "on" : "off"));
+  setting("J", $("trackInv").checked ? 1 : 0, "Track invert");
+  sendAim(true);
+}
+$("speed").oninput = e => $("vSpeed").textContent = e.target.value;
+$("speed").onchange = e => { setting("V", e.target.value, "Speed " + e.target.value); e.target.blur(); };
+$("dist").oninput = e => $("vDist").textContent = e.target.value;
+$("dist").onchange = e => { setting("T", e.target.value, "Stop distance " + e.target.value + " cm"); e.target.blur(); };
+$("sens").onchange = e => { setting("H", e.target.value, "Sensitivity " + e.target.selectedOptions[0].text); e.target.blur(); };
+$("sensorOn").onchange = e => setting("E", e.target.checked ? 1 : 0, "Sensor " + (e.target.checked ? "on" : "off"));
+$("sweepOn").onchange = e => setting("W", e.target.checked ? 1 : 0, "Sweep " + (e.target.checked ? "on" : "off"));
+$("ping").onclick = () => send("P", "Read distance");
+$("autoBtn").onclick = () => send("4", "Auto mode toggle");
+$("trackBtn").onclick = () => send("5", "Line tracking toggle");
+$("followBtn").onclick = () => send("6", "Follow mode toggle");
+$("lightBtn").onclick = () => send("7", "Light seek toggle");
+$("testBtn").onclick = () => send("S", "Motor & rate test");
+$("trackTestBtn").onclick = () => send("K", "Test line sensors");
+$("sensorTestBtn").onclick = () => send("Z", "Test Light/IR sensors");
+$("trackInv").onchange = e => setting("J", e.target.checked ? 1 : 0, "Track invert " + (e.target.checked ? "on" : "off"));
+
+// ---------- sensor direction (slider: left end = look left, right end = look right) ----------
+let lastAim = 0;
+function aimLabel(v){ return v === 90 ? "center" : (v < 90 ? "left " + (90 - v) + "\u00b0" : "right " + (v - 90) + "\u00b0"); }
+function sendAim(quiet){
+  const v = +$("aim").value;
+  const angle = $("flip").checked ? v : 180 - v;   // servo: higher angle looks left, unless flipped
+  send("A" + angle + "\n", "Sensor " + aimLabel(v), quiet);
+}
+function setAim(v){ $("aim").value = v; $("vAim").textContent = aimLabel(v); sendAim(false); }
+$("aim").oninput = e => {
+  $("vAim").textContent = aimLabel(+e.target.value);
+  const now = Date.now();
+  if (now - lastAim > 120){ lastAim = now; sendAim(true); }   // live while dragging
+};
+$("aim").onchange = e => { sendAim(false); e.target.blur(); };
+$("aimL").onclick = () => setAim(30);
+$("aimC").onclick = () => setAim(90);
+$("aimR").onclick = () => setAim(150);
+$("flip").onchange = () => sendAim(false);
+
+const DIRS = new Set(["U", "D", "L", "R", "F", "G", "B", "N"]);
+let heldDir = null;
+const heldKeys = new Set();
+function btnFor(c){ return document.querySelector('button.k[data-c="' + c + '"]'); }
+function startDir(c, b){
+  if (heldDir === c) return;
+  if (heldDir){ const prev = btnFor(heldDir); if (prev) prev.classList.remove("down"); }
+  heldDir = c;
+  if (b) b.classList.add("down");
+  send(c, b ? b.dataset.n : c);
+}
+function stopDir(c){
+  if (c && heldDir !== c) return;
+  if (!heldDir) return;
+  const b = btnFor(heldDir); if (b) b.classList.remove("down");
+  heldDir = null;
+  send("O", "Stop");
+}
+function syncKeyChord(){
+  const u = heldKeys.has("U"), d = heldKeys.has("D"), l = heldKeys.has("L"), r = heldKeys.has("R");
+  let next = null;
+  if (u && l) next = "F";
+  else if (u && r) next = "G";
+  else if (d && l) next = "B";
+  else if (d && r) next = "N";
+  else if (u) next = "U";
+  else if (d) next = "D";
+  else if (l) next = "L";
+  else if (r) next = "R";
+  if (next) startDir(next, btnFor(next));
+  else stopDir();
+}
+
+document.querySelectorAll("button.k").forEach(b => {
+  if (DIRS.has(b.dataset.c)) {
+    b.style.touchAction = "none";
+    b.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      if (b.setPointerCapture) b.setPointerCapture(e.pointerId);
+      startDir(b.dataset.c, b);
+    });
+    b.addEventListener("pointerup", () => stopDir(b.dataset.c));
+    b.addEventListener("pointercancel", () => stopDir(b.dataset.c));
+  } else {
+    b.addEventListener("click", () => send(b.dataset.c, b.dataset.n));
+  }
+});
+
+const KEYS = { ArrowUp:"U", ArrowDown:"D", ArrowLeft:"L", ArrowRight:"R",
+               w:"U", W:"U", s:"D", S:"D", a:"L", A:"L", d:"R", D:"R",
+               q:"F", Q:"F", e:"G", E:"G", z:"B", Z:"B", c:"N", C:"N",
+               " ":"O", Enter:"O", "0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7" };
+const CHORD_KEYS = new Set(["U", "D", "L", "R"]);
+addEventListener("keydown", e => {
+  if (/INPUT|SELECT/.test(e.target.tagName)) return;   // let sliders use the arrow keys
+  const c = KEYS[e.key]; if (!c || e.repeat) return;
+  e.preventDefault();
+  if (CHORD_KEYS.has(c)) { heldKeys.add(c); syncKeyChord(); return; }
+  const b = btnFor(c);
+  if (DIRS.has(c)) { startDir(c, b); return; }
+  b.classList.add("down");
+  send(c, b.dataset.n);
+});
+addEventListener("keyup", e => {
+  const c = KEYS[e.key]; if (!c) return;
+  if (CHORD_KEYS.has(c)) { heldKeys.delete(c); syncKeyChord(); return; }
+  if (DIRS.has(c)) { stopDir(c); return; }
+  btnFor(c).classList.remove("down");
+});
+addEventListener("blur", () => { heldKeys.clear(); stopDir(); });
+</script>
+</body>
+</html>

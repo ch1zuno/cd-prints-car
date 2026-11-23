@@ -1,0 +1,17 @@
+# Arduino / C++ build artifacts
+*.hex
+*.elf
+*.bin
+build/
+*.o
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak
+*~
+
+# VS Code ipch cache
+.vscode/ipch/
